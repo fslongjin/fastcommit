@@ -5,6 +5,8 @@ description = "AI-based command line tool to quickly generate standardized commi
 edition = "2021"
 authors = ["longjin <fslongjin@vip.qq.com>"]
 license = "MIT"
+repository = "https://github.com/fslongjin/fastcommit"
+keywords = ["fastcommit", "conventional-commits", "AI"]
 
 [dependencies]
 anyhow = { version = "1.0.97", features = ["backtrace"] }
