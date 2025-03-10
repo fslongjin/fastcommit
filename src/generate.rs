@@ -76,8 +76,7 @@ fn extract_commit_message(response: &str) -> anyhow::Result<String> {
         .ok_or(anyhow::anyhow!("Start tag <aicommit> not found"))?
         + start_tag.len();
     let end_idx = response
-        .find(end_tag)
-        .ok_or(anyhow::anyhow!("End tag </aicommit> not found"))?;
+        .find(end_tag).unwrap_or_else(|| response.len());
 
     let commit_message = response[start_idx..end_idx].trim().to_string();
     Ok(commit_message)
