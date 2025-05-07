@@ -8,7 +8,7 @@
 
 ```bash
 # 使用 cargo 安装
-cargo install fastcommit
+cargo install --git  https://github.com/fslongjin/fastcommit --tag 0.1.2
 ```
 
 ## 使用
