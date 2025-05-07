@@ -1,13 +1,15 @@
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, fs};
 
-use crate::constants::{DEFAULT_OPENAI_API_BASE, DEFAULT_OPENAI_MODEL};
+use crate::constants::{DEFAULT_MAX_TOKENS, DEFAULT_OPENAI_API_BASE, DEFAULT_OPENAI_MODEL};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     pub api_base: Option<String>,
     pub api_key: String,
     pub model: Option<String>,
+    /// The maximum number of tokens to generate in the commit message.
+    pub max_tokens: Option<u32>,
     /// Whether to use conventional commit message format.
     pub conventional: bool,
     pub language: CommitLanguage,
@@ -78,6 +80,7 @@ impl Default for Config {
             api_base: Some(DEFAULT_OPENAI_API_BASE.into()),
             api_key: "".to_owned(),
             model: Some(DEFAULT_OPENAI_MODEL.into()),
+            max_tokens: Some(DEFAULT_MAX_TOKENS),
             conventional: true,
             language: CommitLanguage::default(),
             verbosity: Verbosity::default(),

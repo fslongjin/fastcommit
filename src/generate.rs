@@ -1,11 +1,12 @@
-
 use openai_api_rust::chat::*;
 use openai_api_rust::*;
 use std::process::Command;
 
 use crate::cli;
 use crate::config::{self, Config};
-use crate::constants::{DEFAULT_OPENAI_MODEL, DEFAULT_PROMPT_TEMPLATE, STOP_WORDS};
+use crate::constants::{
+    DEFAULT_MAX_TOKENS, DEFAULT_OPENAI_MODEL, DEFAULT_PROMPT_TEMPLATE, STOP_WORDS,
+};
 use crate::template_engine::{render_template, TemplateContext};
 
 async fn generate_commit_message(diff: &str, config: &config::Config) -> anyhow::Result<String> {
@@ -48,7 +49,7 @@ async fn generate_commit_message(diff: &str, config: &config::Config) -> anyhow:
         n: None,
         stream: Some(false),
         stop: Some(STOP_WORDS.to_owned()),
-        max_tokens: Some(2048),
+        max_tokens: Some(DEFAULT_MAX_TOKENS as i32),
         presence_penalty: None,
         frequency_penalty: None,
         logit_bias: None,
@@ -67,16 +68,46 @@ async fn generate_commit_message(diff: &str, config: &config::Config) -> anyhow:
     Ok(commit_message)
 }
 
+fn delete_thinking_contents(orig: &str) -> String {
+    let start_tag = "<think>";
+    let end_tag = "</think>";
+
+    let start_idx = orig.find(start_tag).unwrap_or(orig.len());
+    let end_idx = orig.find(end_tag).unwrap_or_else(|| 0);
+    let s = if start_idx < end_idx {
+        let mut result = orig[..start_idx].to_string();
+        result.push_str(&orig[end_idx..]);
+        log::debug!(
+            "Delete thinking contents, start_idx: {}, end_idx: {}: {:?} => {:?}",
+            start_idx,
+            end_idx,
+            orig,
+            result
+        );
+        result
+    } else {
+        orig.to_string()
+    };
+    s
+}
+
 fn extract_commit_message(response: &str) -> anyhow::Result<String> {
     let start_tag = "<aicommit>";
     let end_tag = "</aicommit>";
+
+    let response = delete_thinking_contents(response);
 
     let start_idx = response
         .find(start_tag)
         .ok_or(anyhow::anyhow!("Start tag <aicommit> not found"))?
         + start_tag.len();
-    let end_idx = response
-        .find(end_tag).unwrap_or_else(|| response.len());
+    let end_idx = response.find(end_tag).unwrap_or_else(|| response.len());
+
+    if start_idx >= end_idx {
+        return Err(anyhow::anyhow!(
+            "End tag </aicommit> not found or misplaced"
+        ));
+    }
 
     let commit_message = response[start_idx..end_idx].trim().to_string();
     Ok(commit_message)
