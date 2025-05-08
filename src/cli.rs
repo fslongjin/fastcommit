@@ -16,4 +16,10 @@ pub struct Args {
 
     #[clap(short, long, help = "Set the verbosity level")]
     pub verbosity: Option<Verbosity>,
+
+    #[clap(
+        long,
+        help = "Maximum line length for commit message (0 means no limit)"
+    )]
+    pub max_line_length: Option<u32>,
 }

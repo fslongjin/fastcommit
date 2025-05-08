@@ -1,6 +1,7 @@
 use openai_api_rust::chat::*;
 use openai_api_rust::*;
 use std::process::Command;
+use textwrap::fill;
 
 use crate::cli;
 use crate::config::{self, Config};
@@ -91,6 +92,24 @@ fn delete_thinking_contents(orig: &str) -> String {
     s
 }
 
+fn format_message(message: &str, max_line_length: Option<u32>) -> String {
+    match max_line_length {
+        Some(0) | None => message.to_string(),
+        Some(len) => {
+            let mut formatted = String::new();
+            for line in message.lines() {
+                if line.trim().is_empty() {
+                    formatted.push('\n');
+                } else {
+                    formatted.push_str(&fill(line, len as usize));
+                    formatted.push('\n');
+                }
+            }
+            formatted.trim_end().to_string()
+        }
+    }
+}
+
 fn extract_commit_message(response: &str) -> anyhow::Result<String> {
     let start_tag = "<aicommit>";
     let end_tag = "</aicommit>";
@@ -131,5 +150,6 @@ fn get_diff(diff_file: Option<&str>) -> anyhow::Result<String> {
 pub async fn generate(args: &cli::Args, config: &Config) -> anyhow::Result<String> {
     let diff = get_diff(args.diff_file.as_deref())?;
     let message = generate_commit_message(&diff, config).await?;
-    Ok(message)
+    let formatted_message = format_message(&message, config.max_line_length);
+    Ok(formatted_message)
 }

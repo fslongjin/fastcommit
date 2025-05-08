@@ -12,6 +12,8 @@ pub struct Config {
     pub max_tokens: Option<u32>,
     /// Whether to use conventional commit message format.
     pub conventional: bool,
+    /// Maximum line length for commit message (0 means no limit)
+    pub max_line_length: Option<u32>,
     pub language: CommitLanguage,
     pub verbosity: Verbosity,
 }
@@ -82,6 +84,7 @@ impl Default for Config {
             model: Some(DEFAULT_OPENAI_MODEL.into()),
             max_tokens: Some(DEFAULT_MAX_TOKENS),
             conventional: true,
+            max_line_length: Some(0),
             language: CommitLanguage::default(),
             verbosity: Verbosity::default(),
         }
