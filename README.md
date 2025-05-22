@@ -10,7 +10,7 @@ You can install `fastcommit` using the following method:
 
 ```bash
 # Install using cargo
-cargo install --git  https://github.com/fslongjin/fastcommit --tag 0.1.2
+cargo install --git  https://github.com/fslongjin/fastcommit --tag 0.1.3
 ```
 
 ## Usage
@@ -24,9 +24,13 @@ fastcommit
 
 ### Options
 
+NOTE: All common config can be configured via `~/.fastcommit/config.toml`
+
 - `-d, --diff-file <DIFF_FILE>`: Specify the path to the file containing the differences.
 - `--conventional <CONVENTIONAL>`: Enable or disable conventional commit style analysis. Acceptable values are `true` or `false`.
 - `-l, --language <LANGUAGE>`: Specify the language for the commit message. Acceptable values are `en` (English) or `zh` (Chinese).
+- `-gb, --generate-branch`: Generate branch name.
+   - `--branch-prefix`: prefix of the generated branch name
 - `-v, --verbosity <VERBOSITY>`: Set the detail level of the commit message. Acceptable values are `verbose` (detailed), `normal`, or `quiet` (concise). The default is `quiet`.
 - `-h, --help`: Print help information.
 - `-V, --version`: Print version information.

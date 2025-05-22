@@ -16,4 +16,14 @@ pub struct Args {
 
     #[clap(short, long, help = "Set the verbosity level")]
     pub verbosity: Option<Verbosity>,
+
+    #[clap(
+        long = "generate-branch",
+        alias = "gb",
+        help = "Generate a branch name based on changes (optionally with prefix)"
+    )]
+    pub generate_branch: bool,
+
+    #[clap(long, help = "Override branch prefix (default from config)")]
+    pub branch_prefix: Option<String>,
 }

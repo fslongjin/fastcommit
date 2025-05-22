@@ -4,6 +4,8 @@ use std::process::Command;
 
 use crate::cli;
 use crate::config::{self, Config};
+
+use crate::constants::BRANCH_NAME_PROMPT;
 use crate::constants::{
     DEFAULT_MAX_TOKENS, DEFAULT_OPENAI_MODEL, DEFAULT_PROMPT_TEMPLATE, STOP_WORDS,
 };
@@ -11,17 +13,8 @@ use crate::template_engine::{render_template, TemplateContext};
 
 async fn generate_commit_message(diff: &str, config: &config::Config) -> anyhow::Result<String> {
     let auth = Auth::new(config.api_key.as_str());
-    let api_base = config
-        .api_base
-        .as_deref()
-        .unwrap_or("https://api.openai.com/v1");
 
-    let api_base_url = if api_base.ends_with("/") {
-        api_base.to_owned()
-    } else {
-        format!("{}/", api_base)
-    };
-    let openai = OpenAI::new(auth, &api_base_url);
+    let openai = OpenAI::new(auth, &config.api_base());
 
     let template_ctx =
         TemplateContext::new(config.conventional, config.language, config.verbosity, diff);
@@ -64,7 +57,7 @@ async fn generate_commit_message(diff: &str, config: &config::Config) -> anyhow:
         .ok_or(anyhow::anyhow!("No message in response"))?
         .content;
     // Extract content between <aicommit> tags
-    let commit_message = extract_commit_message(msg)?;
+    let commit_message = extract_aicommit_message(msg)?;
     Ok(commit_message)
 }
 
@@ -91,7 +84,7 @@ fn delete_thinking_contents(orig: &str) -> String {
     s
 }
 
-fn extract_commit_message(response: &str) -> anyhow::Result<String> {
+fn extract_aicommit_message(response: &str) -> anyhow::Result<String> {
     let start_tag = "<aicommit>";
     let end_tag = "</aicommit>";
 
@@ -132,4 +125,84 @@ pub async fn generate(args: &cli::Args, config: &Config) -> anyhow::Result<Strin
     let diff = get_diff(args.diff_file.as_deref())?;
     let message = generate_commit_message(&diff, config).await?;
     Ok(message)
+}
+
+async fn generate_branch_name_with_ai(
+    diff: &str,
+    prefix: Option<&str>,
+    config: &Config,
+) -> anyhow::Result<String> {
+    let auth = Auth::new(config.api_key.as_str());
+
+    let openai = OpenAI::new(auth, &config.api_base());
+
+    let prompt = BRANCH_NAME_PROMPT.replace("{{diff}}", diff);
+    let messages = vec![
+        Message {
+            role: Role::System,
+            content: "你是一个代码版本控制专家，擅长创建描述性的分支名。".to_string(),
+        },
+        Message {
+            role: Role::User,
+            content: prompt,
+        },
+    ];
+
+    let chat = ChatBody {
+        model: config
+            .model
+            .as_deref()
+            .unwrap_or(DEFAULT_OPENAI_MODEL)
+            .to_owned(),
+        messages,
+        temperature: Some(0.2f32),
+        top_p: None,
+        n: None,
+        stream: Some(false),
+        stop: Some(STOP_WORDS.to_owned()),
+        max_tokens: Some(40),
+        presence_penalty: None,
+        frequency_penalty: None,
+        logit_bias: None,
+        user: None,
+    };
+
+    let response = openai
+        .chat_completion_create(&chat)
+        .map_err(|e| anyhow::anyhow!("Failed to create chat completion: {}", e))?;
+    let msg = response
+        .choices
+        .first()
+        .ok_or(anyhow::anyhow!("No choices in response"))?
+        .message
+        .as_ref()
+        .ok_or(anyhow::anyhow!("No message in response"))?
+        .content
+        .trim()
+        .to_string();
+
+    let branch_name = extract_aicommit_message(&msg)?;
+
+    // Clean up the branch name
+    let branch_name = if let Some(prefix) = prefix {
+        format!("{}{}", prefix.trim(), branch_name.trim())
+    } else {
+        branch_name.trim().to_string()
+    };
+
+    if branch_name.is_empty() {
+        return Err(anyhow::anyhow!("Failed to generate valid branch name"));
+    }
+
+    Ok(branch_name)
+}
+
+pub async fn generate_branch(args: &cli::Args, config: &Config) -> anyhow::Result<String> {
+    let diff = get_diff(args.diff_file.as_deref())?;
+    let prefix = args
+        .branch_prefix
+        .as_deref()
+        .or(config.branch_prefix.as_deref());
+    let branch_name = generate_branch_name_with_ai(&diff, prefix, config).await?;
+    Ok(branch_name)
 }

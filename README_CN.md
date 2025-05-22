@@ -8,7 +8,7 @@
 
 ```bash
 # 使用 cargo 安装
-cargo install --git  https://github.com/fslongjin/fastcommit --tag 0.1.2
+cargo install --git  https://github.com/fslongjin/fastcommit --tag 0.1.3
 ```
 
 ## 使用
@@ -22,9 +22,13 @@ fastcommit
 
 ### 选项
 
+NOTE: All common config can be configured via `~/.fastcommit/config.toml`
+
 - `-d, --diff-file <DIFF_FILE>`: 指定包含差异的文件路径。
 - `--conventional <CONVENTIONAL>`: 启用或禁用规范提交风格分析。可选值为 `true` 或 `false`。
 - `-l, --language <LANGUAGE>`: 指定提交信息的语言。可选值为 `en`（英文）或 `zh`（中文）。
+- `-gb, --generate-branch`: 模式：生成分支名
+   - `--branch-prefix`: 生成的分支名的前缀 
 - `-v, --verbosity <VERBOSITY>`: 设置提交信息的详细级别。可选值为 `verbose`（详细）、`normal`（正常）或 `quiet`（简洁）。 默认为 `quiet`。
 - `-h, --help`: 打印帮助信息。
 - `-V, --version`: 打印版本信息。
