@@ -5,7 +5,7 @@ use crate::constants::{DEFAULT_MAX_TOKENS, DEFAULT_OPENAI_API_BASE, DEFAULT_OPEN
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
-    pub api_base: Option<String>,
+    api_base: Option<String>,
     pub api_key: String,
     pub model: Option<String>,
     /// The maximum number of tokens to generate in the commit message.
@@ -14,6 +14,25 @@ pub struct Config {
     pub conventional: bool,
     pub language: CommitLanguage,
     pub verbosity: Verbosity,
+    /// Prefix for generated branch names (e.g. username in monorepo)
+    pub branch_prefix: Option<String>,
+}
+
+impl Config {
+    pub fn api_base(&self) -> String {
+        let api_base = self
+            .api_base
+            .as_deref()
+            .unwrap_or("https://api.openai.com/v1");
+
+        let api_base = if api_base.ends_with("/") {
+            api_base.to_owned()
+        } else {
+            format!("{}/", api_base)
+        };
+
+        api_base
+    }
 }
 
 /// Commit message verbosity level.
@@ -84,6 +103,7 @@ impl Default for Config {
             conventional: true,
             language: CommitLanguage::default(),
             verbosity: Verbosity::default(),
+            branch_prefix: None,
         }
     }
 }

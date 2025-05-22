@@ -91,3 +91,42 @@ lazy_static! {
 }
 
 pub const DEFAULT_MAX_TOKENS: u32 = 2048;
+
+pub const BRANCH_NAME_PROMPT: &str = r#"
+# 角色
+作为代码版本控制专家，请根据以下变更生成一个简洁、描述性的分支名。
+
+# 要求：
+1. 使用英文小写字母和连字符
+2. 长度不超过40个字符
+3. 能准确反映变更内容
+4. 如果有前缀，请在前面加上前缀
+5. 直接返回分支名，不要包含其他内容或解释
+6. branch name内容要使用<aicommit></aicommit>标签包裹
+
+# 示例：
+
+branch name内容要使用<aicommit>标签包裹，例如：
+
+## 示例1：
+
+<aicommit>
+fix-login-issue
+</aicommit>
+
+## 示例2：
+
+<aicommit>
+feat-add-user-auth
+</aicommit>
+
+## 示例3：
+
+<aicommit>
+username-refactor-payment-module
+</aicommit>
+
+变更内容：
+
+{{diff}}
+"#;

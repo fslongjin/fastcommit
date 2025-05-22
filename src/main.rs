@@ -26,7 +26,12 @@ async fn main() -> anyhow::Result<()> {
         config.verbosity = v;
     }
 
-    let msg = generate::generate(&args, &config).await?;
-    println!("{}", msg);
+    if args.generate_branch {
+        let branch_name = generate::generate_branch(&args, &config).await?;
+        println!("Generated branch name: {}", branch_name);
+    } else {
+        let msg = generate::generate(&args, &config).await?;
+        println!("{}", msg);
+    }
     Ok(())
 }
