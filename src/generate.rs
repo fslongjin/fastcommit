@@ -101,7 +101,26 @@ fn format_message(message: &str, max_line_length: Option<u32>) -> String {
                 if line.trim().is_empty() {
                     formatted.push('\n');
                 } else {
-                    formatted.push_str(&fill(line, len as usize));
+                    // Use custom word separator to preserve URLs
+                    let options = textwrap::Options::new(len as usize)
+                        .word_separator(textwrap::WordSeparator::Custom(|line| {
+                            let mut words = Vec::new();
+                            let mut start = 0;
+                            // Split on whitespace but keep URLs intact
+                            for (i, c) in line.char_indices() {
+                                if c.is_whitespace() {
+                                    if start != i {
+                                        words.push(textwrap::core::Word::from(&line[start..i]));
+                                    }
+                                    start = i + 1;
+                                }
+                            }
+                            if start < line.len() {
+                                words.push(textwrap::core::Word::from(&line[start..]));
+                            }
+                            Box::new(words.into_iter()) as Box<dyn Iterator<Item = textwrap::core::Word> + '_>
+                        }));
+                    formatted.push_str(&textwrap::fill(line, &options));
                     formatted.push('\n');
                 }
             }
@@ -152,4 +171,43 @@ pub async fn generate(args: &cli::Args, config: &Config) -> anyhow::Result<Strin
     let message = generate_commit_message(&diff, config).await?;
     let formatted_message = format_message(&message, config.max_line_length);
     Ok(formatted_message)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_format_message_basic() {
+        let input = "这是一个测试字符串，用于验证换行功能是否正常工作。";
+        let expected = "这是一个测试字符串，\n用于验证换行功能是否\n正常工作。\n";
+        assert_eq!(format_message(input, Some(20)), expected);
+    }
+
+    #[test]
+    fn test_format_message_with_url() {
+        let input = "请访问https://example.com/very/long/url/should/not/be/broken 获取更多信息";
+        let expected = "请访问https://example.com/very/long/url/should/not/be/broken\n获取更多信息\n";
+        assert_eq!(format_message(input, Some(20)), expected);
+    }
+
+    #[test]
+    fn test_format_message_multiline() {
+        let input = "第一行\n\n第二行有一些更长的内容需要换行处理";
+        let expected = "第一行\n\n第二行有一些更\n长的内容需要换\n行处理\n";
+        assert_eq!(format_message(input, Some(10)), expected);
+    }
+
+    #[test]
+    fn test_format_message_no_limit() {
+        let input = "这个字符串不应该被换行，因为设置了0值";
+        assert_eq!(format_message(input, Some(0)), input);
+    }
+
+    #[test]
+    fn test_format_message_mixed_content() {
+        let input = "常规文本 https://example.com 和更多文本";
+        let expected = "常规文本 https://example.com 和更多文本\n";
+        assert_eq!(format_message(input, Some(15)), expected);
+    }
 }
