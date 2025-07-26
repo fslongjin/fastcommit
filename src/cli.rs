@@ -26,4 +26,7 @@ pub struct Args {
 
     #[clap(long, help = "Override branch prefix (default from config)")]
     pub branch_prefix: Option<String>,
+
+    #[clap(short, long, help = "Additional prompt to help AI understand the commit context")]
+    pub prompt: Option<String>,
 }
