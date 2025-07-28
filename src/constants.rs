@@ -13,6 +13,8 @@ pub const DEFAULT_PROMPT_TEMPLATE: &str = r#"
 - 使用{{language}}编写
 - 详细程度：{{verbosity_level}}
 
+{{user_description}}
+
 # 什么是约定式提交规范？
 
 约定式提交 1.0.0
@@ -73,6 +75,7 @@ pub enum PromptTemplateReplaceLabel {
     VerbosityLevel,
     ConventionalCommit,
     Diff,
+    UserDescription,
 }
 
 impl PromptTemplateReplaceLabel {
@@ -82,6 +85,7 @@ impl PromptTemplateReplaceLabel {
             PromptTemplateReplaceLabel::VerbosityLevel => "{{verbosity_level}}",
             PromptTemplateReplaceLabel::ConventionalCommit => "{{conventional_commit}}",
             PromptTemplateReplaceLabel::Diff => "{{diff}}",
+            PromptTemplateReplaceLabel::UserDescription => "{{user_description}}",
         }
     }
 }

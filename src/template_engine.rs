@@ -8,6 +8,7 @@ pub struct TemplateContext<'a> {
     pub language: CommitLanguage,
     pub verbosity: Verbosity,
     pub diff_content: &'a str,
+    pub user_description: Option<&'a str>,
 }
 
 impl<'a> TemplateContext<'a> {
@@ -16,12 +17,14 @@ impl<'a> TemplateContext<'a> {
         language: CommitLanguage,
         verbosity: Verbosity,
         diff_content: &'a str,
+        user_description: Option<&'a str>,
     ) -> Self {
         Self {
             conventional,
             language,
             verbosity,
             diff_content,
+            user_description,
         }
     }
 }
@@ -43,6 +46,10 @@ pub fn render_template(template: &str, context: TemplateContext) -> anyhow::Resu
         .replace(
             PromptTemplateReplaceLabel::Diff.get_label(),
             context.diff_content,
+        )
+        .replace(
+            PromptTemplateReplaceLabel::UserDescription.get_label(),
+            context.user_description.unwrap_or(""),
         );
 
     Ok(rendered)

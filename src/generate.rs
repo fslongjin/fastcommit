@@ -11,13 +11,22 @@ use crate::constants::{
 };
 use crate::template_engine::{render_template, TemplateContext};
 
-async fn generate_commit_message(diff: &str, config: &config::Config) -> anyhow::Result<String> {
+async fn generate_commit_message(
+    diff: &str,
+    config: &config::Config,
+    user_description: Option<&str>,
+) -> anyhow::Result<String> {
     let auth = Auth::new(config.api_key.as_str());
 
     let openai = OpenAI::new(auth, &config.api_base());
 
-    let template_ctx =
-        TemplateContext::new(config.conventional, config.language, config.verbosity, diff);
+    let template_ctx = TemplateContext::new(
+        config.conventional,
+        config.language,
+        config.verbosity,
+        diff,
+        user_description,
+    );
 
     let messages = vec![
         Message {
@@ -123,7 +132,7 @@ fn get_diff(diff_file: Option<&str>) -> anyhow::Result<String> {
 
 pub async fn generate(args: &cli::Args, config: &Config) -> anyhow::Result<String> {
     let diff = get_diff(args.diff_file.as_deref())?;
-    let message = generate_commit_message(&diff, config).await?;
+    let message = generate_commit_message(&diff, config, args.prompt.as_deref()).await?;
     Ok(message)
 }
 

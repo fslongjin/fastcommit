@@ -30,6 +30,7 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
 - `-gb, --generate-branch`: 模式：生成分支名
    - `--branch-prefix`: 生成的分支名的前缀 
 - `-v, --verbosity <VERBOSITY>`: 设置提交信息的详细级别。可选值为 `verbose`（详细）、`normal`（正常）或 `quiet`（简洁）。 默认为 `quiet`。
+- `-p, --prompt <PROMPT>`: 额外的提示信息，帮助 AI 理解提交上下文。
 - `-h, --help`: 打印帮助信息。
 - `-V, --version`: 打印版本信息。
 
@@ -51,6 +52,12 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
 
    ```bash
    fastcommit -d changes.diff -v verbose
+   ```
+
+4. 提供额外上下文帮助 AI 理解提交：
+
+   ```bash
+   fastcommit -d changes.diff -p "修复了登录页面的样式问题，特别是按钮对齐"
    ```
 
 ## 贡献

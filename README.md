@@ -32,6 +32,7 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
 - `-gb, --generate-branch`: Generate branch name.
    - `--branch-prefix`: prefix of the generated branch name
 - `-v, --verbosity <VERBOSITY>`: Set the detail level of the commit message. Acceptable values are `verbose` (detailed), `normal`, or `quiet` (concise). The default is `quiet`.
+- `-p, --prompt <PROMPT>`: Additional prompt to help AI understand the commit context.
 - `-h, --help`: Print help information.
 - `-V, --version`: Print version information.
 
@@ -53,6 +54,12 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
 
    ```bash
    fastcommit -d changes.diff -v verbose
+   ```
+
+4. Provide additional context to help AI understand the commit:
+
+   ```bash
+   fastcommit -d changes.diff -p "Fixed login page styling issues, especially button alignment"
    ```
 
 ## Contributing
