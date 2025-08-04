@@ -20,12 +20,21 @@ async fn generate_commit_message(
 
     let openai = OpenAI::new(auth, &config.api_base());
 
+    // Add "commit message: " prefix to user description if provided
+    let prefixed_user_description = user_description.map(|desc| {
+        if desc.trim().is_empty() {
+            desc.to_string()
+        } else {
+            format!("commit message: {}", desc)
+        }
+    });
+    
     let template_ctx = TemplateContext::new(
         config.conventional,
         config.language,
         config.verbosity,
         diff,
-        user_description,
+        prefixed_user_description.as_deref(),
     );
 
     let messages = vec![
