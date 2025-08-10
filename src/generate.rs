@@ -124,11 +124,20 @@ fn extract_aicommit_message(response: &str) -> anyhow::Result<String> {
     Ok(commit_message)
 }
 
-fn get_diff(diff_file: Option<&str>) -> anyhow::Result<String> {
+fn get_diff(diff_file: Option<&str>, range: Option<&str>) -> anyhow::Result<String> {
     match diff_file {
         Some(path) => std::fs::read_to_string(path).map_err(Into::into),
         None => {
-            let output = Command::new("git").arg("diff").arg("--cached").output()?;
+            let mut cmd = Command::new("git");
+            cmd.arg("diff");
+            
+            if let Some(range_str) = range {
+                cmd.arg(range_str);
+            } else {
+                cmd.arg("--cached");
+            }
+            
+            let output = cmd.output()?;
             let diff_str = String::from_utf8_lossy(&output.stdout).into_owned();
             if diff_str.trim().is_empty() {
                 Err(anyhow::anyhow!("No changes to commit"))
@@ -140,7 +149,7 @@ fn get_diff(diff_file: Option<&str>) -> anyhow::Result<String> {
 }
 
 pub async fn generate(args: &cli::Args, config: &Config) -> anyhow::Result<String> {
-    let diff = get_diff(args.diff_file.as_deref())?;
+    let diff = get_diff(args.diff_file.as_deref(), args.range.as_deref())?;
     let message = generate_commit_message(&diff, config, args.prompt.as_deref()).await?;
     Ok(message)
 }
@@ -216,7 +225,7 @@ async fn generate_branch_name_with_ai(
 }
 
 pub async fn generate_branch(args: &cli::Args, config: &Config) -> anyhow::Result<String> {
-    let diff = get_diff(args.diff_file.as_deref())?;
+    let diff = get_diff(args.diff_file.as_deref(), args.range.as_deref())?;
     let prefix = args
         .branch_prefix
         .as_deref()

@@ -31,6 +31,7 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
    - `--branch-prefix`: 生成的分支名的前缀 
 - `-v, --verbosity <VERBOSITY>`: 设置提交信息的详细级别。可选值为 `verbose`（详细）、`normal`（正常）或 `quiet`（简洁）。 默认为 `quiet`。
 - `-p, --prompt <PROMPT>`: 额外的提示信息，帮助 AI 理解提交上下文。
+- `-r, --range <RANGE>`: 指定差异范围以生成提交信息（例如：HEAD~1, abc123..def456）。
 - `-h, --help`: 打印帮助信息。
 - `-V, --version`: 打印版本信息。
 
@@ -58,6 +59,16 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
 
    ```bash
    fastcommit -d changes.diff -p "修复了登录页面的样式问题，特别是按钮对齐"
+   ```
+
+5. 为特定的差异范围生成提交信息：
+
+   ```bash
+   # 为最近一次提交生成提交信息
+   fastcommit -r HEAD~1
+   
+   # 为指定提交范围生成提交信息
+   fastcommit -r abc123..def456
    ```
 
 ## 贡献

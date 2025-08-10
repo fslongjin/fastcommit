@@ -29,4 +29,11 @@ pub struct Args {
 
     #[clap(short, long, help = "Additional prompt to help AI understand the commit context")]
     pub prompt: Option<String>,
+
+    #[clap(
+        short = 'r',
+        long,
+        help = "Specify diff range (e.g. HEAD~1, abc123..def456)"
+    )]
+    pub range: Option<String>,
 }
