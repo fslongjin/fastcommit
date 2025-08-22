@@ -187,7 +187,7 @@ async fn generate_branch_name_with_ai(
         n: None,
         stream: Some(false),
         stop: Some(STOP_WORDS.to_owned()),
-        max_tokens: Some(40),
+        max_tokens: Some(DEFAULT_MAX_TOKENS as i32),
         presence_penalty: None,
         frequency_penalty: None,
         logit_bias: None,
