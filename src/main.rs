@@ -1,4 +1,5 @@
 use clap::Parser;
+use log::error;
 
 #[macro_use]
 extern crate lazy_static;
@@ -8,6 +9,7 @@ mod config;
 mod constants;
 mod generate;
 mod template_engine;
+mod update_checker;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -26,6 +28,8 @@ async fn main() -> anyhow::Result<()> {
         config.verbosity = v;
     }
 
+    run_update_checker().await;
+
     if args.generate_branch {
         let branch_name = generate::generate_branch(&args, &config).await?;
         println!("Generated branch name: {}", branch_name);
@@ -34,4 +38,19 @@ async fn main() -> anyhow::Result<()> {
         println!("{}", msg);
     }
     Ok(())
+}
+
+async fn run_update_checker() {
+    match update_checker::check_for_updates().await {
+        Ok(Some(update_info)) => {
+            update_checker::display_update_info(&update_info);
+        }
+        Ok(None) => {
+            // 没有新版本，无需处理
+        }
+        Err(e) => {
+            // 忽略更新检查错误，不影响主功能
+            error!("Error checking for updates: {}", e);
+        }
+    }
 }

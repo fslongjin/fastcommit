@@ -134,3 +134,6 @@ username-refactor-payment-module
 
 {{diff}}
 "#;
+
+pub const UPDATE_CHECKER_URL: &str =
+    "http://update-checker.longjin666.cn/v1/updates/fastcommit/latest";
