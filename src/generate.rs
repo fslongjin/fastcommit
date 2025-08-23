@@ -28,7 +28,7 @@ async fn generate_commit_message(
             format!("commit message: {}", desc)
         }
     });
-    
+
     let template_ctx = TemplateContext::new(
         config.conventional,
         config.language,
@@ -130,13 +130,13 @@ fn get_diff(diff_file: Option<&str>, range: Option<&str>) -> anyhow::Result<Stri
         None => {
             let mut cmd = Command::new("git");
             cmd.arg("diff");
-            
+
             if let Some(range_str) = range {
                 cmd.arg(range_str);
             } else {
                 cmd.arg("--cached");
             }
-            
+
             let output = cmd.output()?;
             let diff_str = String::from_utf8_lossy(&output.stdout).into_owned();
             if diff_str.trim().is_empty() {
