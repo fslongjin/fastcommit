@@ -3,7 +3,13 @@ use clap::Parser;
 use crate::config::{CommitLanguage, Verbosity};
 
 #[derive(Parser, Debug)]
-#[clap(version, about)]
+#[clap(
+    version = env!("CARGO_PKG_VERSION"),
+    about = concat!(
+        "AI-based command line tool to quickly generate standardized commit messages.\n\n",
+        "Version: ", env!("CARGO_PKG_VERSION")
+    )
+)]
 pub struct Args {
     #[clap(short, long, help = "Path to the file containing the diff to analyze")]
     pub diff_file: Option<String>,
