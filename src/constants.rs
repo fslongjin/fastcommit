@@ -90,11 +90,7 @@ impl PromptTemplateReplaceLabel {
     }
 }
 
-lazy_static! {
-    pub static ref STOP_WORDS: Vec<String> = vec![String::from("</aicommit>")];
-}
-
-pub const DEFAULT_MAX_TOKENS: u32 = 2048;
+pub const DEFAULT_MAX_TOKENS: u32 = 4096;
 
 pub const BRANCH_NAME_PROMPT: &str = r#"
 # 角色

@@ -1,9 +1,6 @@
 use clap::Parser;
 use log::error;
 
-#[macro_use]
-extern crate lazy_static;
-
 mod cli;
 mod config;
 mod constants;
