@@ -6,9 +6,7 @@ use crate::cli;
 use crate::config::{self, Config};
 
 use crate::constants::BRANCH_NAME_PROMPT;
-use crate::constants::{
-    DEFAULT_MAX_TOKENS, DEFAULT_OPENAI_MODEL, DEFAULT_PROMPT_TEMPLATE, STOP_WORDS,
-};
+use crate::constants::{DEFAULT_MAX_TOKENS, DEFAULT_OPENAI_MODEL, DEFAULT_PROMPT_TEMPLATE};
 use crate::template_engine::{render_template, TemplateContext};
 
 async fn generate_commit_message(
@@ -59,7 +57,7 @@ async fn generate_commit_message(
         top_p: None,
         n: None,
         stream: Some(false),
-        stop: Some(STOP_WORDS.to_owned()),
+        stop: None, // 移除 stop words 以避免思考过程中的干扰
         max_tokens: Some(DEFAULT_MAX_TOKENS as i32),
         presence_penalty: None,
         frequency_penalty: None,
@@ -103,25 +101,32 @@ fn delete_thinking_contents(orig: &str) -> String {
 }
 
 fn extract_aicommit_message(response: &str) -> anyhow::Result<String> {
-    let start_tag = "<aicommit>";
-    let end_tag = "</aicommit>";
-
     let response = delete_thinking_contents(response);
 
-    let start_idx = response
-        .find(start_tag)
-        .ok_or(anyhow::anyhow!("Start tag <aicommit> not found"))?
-        + start_tag.len();
-    let end_idx = response.find(end_tag).unwrap_or_else(|| response.len());
+    // 查找所有 <aicommit>...</aicommit> 块
+    let mut matches = Vec::new();
+    let mut pos = 0;
 
-    if start_idx >= end_idx {
-        return Err(anyhow::anyhow!(
-            "End tag </aicommit> not found or misplaced"
-        ));
+    while let Some(start_idx) = response[pos..].find("<aicommit>") {
+        let absolute_start = pos + start_idx;
+        let content_start = absolute_start + "<aicommit>".len();
+
+        if let Some(end_idx) = response[content_start..].find("</aicommit>") {
+            let absolute_end = content_start + end_idx;
+            let content = &response[content_start..absolute_end];
+            matches.push(content.trim());
+            pos = absolute_end + "</aicommit>".len();
+        } else {
+            break;
+        }
     }
 
-    let commit_message = response[start_idx..end_idx].trim().to_string();
-    Ok(commit_message)
+    // 返回第一个匹配的内容
+    matches
+        .into_iter()
+        .next()
+        .map(|s| s.to_string())
+        .ok_or(anyhow::anyhow!("Start tag <aicommit> not found"))
 }
 
 fn get_diff(diff_file: Option<&str>, range: Option<&str>) -> anyhow::Result<String> {
@@ -186,7 +191,7 @@ async fn generate_branch_name_with_ai(
         top_p: None,
         n: None,
         stream: Some(false),
-        stop: Some(STOP_WORDS.to_owned()),
+        stop: None, // 移除 stop words 以避免思考过程中的干扰
         max_tokens: Some(DEFAULT_MAX_TOKENS as i32),
         presence_penalty: None,
         frequency_penalty: None,
