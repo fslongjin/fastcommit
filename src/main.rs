@@ -27,10 +27,19 @@ async fn main() -> anyhow::Result<()> {
 
     run_update_checker().await;
 
-    if args.generate_branch {
+    // 根据参数决定生成内容：
+    // 1. --gb --m 同时：生成分支名 + 提交信息
+    // 2. 仅 --gb：只生成分支名
+    // 3. 默认（无 --gb 或仅 --m）：生成提交信息
+    if args.generate_branch && args.generate_message {
+        let (branch_name, msg) = generate::generate_both(&args, &config).await?;
+        println!("Generated branch name: {}", branch_name);
+        println!("{}", msg);
+    } else if args.generate_branch {
         let branch_name = generate::generate_branch(&args, &config).await?;
         println!("Generated branch name: {}", branch_name);
     } else {
+        // 包括：无参数 或 仅 --m
         let msg = generate::generate(&args, &config).await?;
         println!("{}", msg);
     }

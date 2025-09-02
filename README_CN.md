@@ -27,8 +27,9 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
 - `-d, --diff-file <DIFF_FILE>`: 指定包含差异的文件路径。
 - `--conventional <CONVENTIONAL>`: 启用或禁用规范提交风格分析。可选值为 `true` 或 `false`。
 - `-l, --language <LANGUAGE>`: 指定提交信息的语言。可选值为 `en`（英文）或 `zh`（中文）。
-- `-gb, --generate-branch`: 模式：生成分支名
-   - `--branch-prefix`: 生成的分支名的前缀 
+- `-b, --generate-branch`: 生成分支名
+   - `--branch-prefix`: 生成的分支名的前缀
+- `-m, --message`: 生成提交信息（与 -b 一起使用可同时输出） 
 - `-v, --verbosity <VERBOSITY>`: 设置提交信息的详细级别。可选值为 `verbose`（详细）、`normal`（正常）或 `quiet`（简洁）。 默认为 `quiet`。
 - `-p, --prompt <PROMPT>`: 额外的提示信息，帮助 AI 理解提交上下文。
 - `-r, --range <RANGE>`: 指定差异范围以生成提交信息（例如：HEAD~1, abc123..def456）。
@@ -61,7 +62,19 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
    fastcommit -d changes.diff -p "修复了登录页面的样式问题，特别是按钮对齐"
    ```
 
-5. 为特定的差异范围生成提交信息：
+5. 仅生成分支名：
+
+   ```bash
+   fastcommit -b
+   ```
+
+6. 同时生成分支名和提交信息：
+
+   ```bash
+   fastcommit -b -m
+   ```
+
+7. 为特定的差异范围生成提交信息：
 
    ```bash
    # 为最近一次提交生成提交信息

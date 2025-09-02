@@ -29,8 +29,9 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
 - `-d, --diff-file <DIFF_FILE>`: Specify the path to the file containing the differences.
 - `--conventional <CONVENTIONAL>`: Enable or disable conventional commit style analysis. Acceptable values are `true` or `false`.
 - `-l, --language <LANGUAGE>`: Specify the language for the commit message. Acceptable values are `en` (English) or `zh` (Chinese).
-- `-gb, --generate-branch`: Generate branch name.
+- `-b, --generate-branch`: Generate branch name.
    - `--branch-prefix`: prefix of the generated branch name
+- `-m, --message`: Generate commit message (use with -b to output both)
 - `-v, --verbosity <VERBOSITY>`: Set the detail level of the commit message. Acceptable values are `verbose` (detailed), `normal`, or `quiet` (concise). The default is `quiet`.
 - `-p, --prompt <PROMPT>`: Additional prompt to help AI understand the commit context.
 - `-r, --range <RANGE>`: Specify diff range for generating commit message (e.g. HEAD~1, abc123..def456).
@@ -63,7 +64,19 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
    fastcommit -d changes.diff -p "Fixed login page styling issues, especially button alignment"
    ```
 
-5. Generate commit message for a specific diff range:
+5. Generate branch name only:
+
+   ```bash
+   fastcommit -b
+   ```
+
+6. Generate both branch name and commit message:
+
+   ```bash
+   fastcommit -b -m
+   ```
+
+7. Generate commit message for a specific diff range:
 
    ```bash
    # Generate commit message for the last commit
