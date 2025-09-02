@@ -25,7 +25,7 @@ pub struct Args {
 
     #[clap(
         long = "generate-branch",
-        alias = "gb",
+        short = 'b',
         help = "Generate a branch name based on changes (optionally with prefix)"
     )]
     pub generate_branch: bool,
@@ -46,4 +46,11 @@ pub struct Args {
         help = "Specify diff range (e.g. HEAD~1, abc123..def456)"
     )]
     pub range: Option<String>,
+
+    #[clap(
+        short = 'm',
+        long = "message",
+        help = "Generate commit message (use with -b to output both)"
+    )]
+    pub generate_message: bool,
 }

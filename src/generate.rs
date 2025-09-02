@@ -238,3 +238,14 @@ pub async fn generate_branch(args: &cli::Args, config: &Config) -> anyhow::Resul
     let branch_name = generate_branch_name_with_ai(&diff, prefix, config).await?;
     Ok(branch_name)
 }
+
+pub async fn generate_both(args: &cli::Args, config: &Config) -> anyhow::Result<(String, String)> {
+    let diff = get_diff(args.diff_file.as_deref(), args.range.as_deref())?;
+    let prefix = args
+        .branch_prefix
+        .as_deref()
+        .or(config.branch_prefix.as_deref());
+    let branch_name = generate_branch_name_with_ai(&diff, prefix, config).await?;
+    let commit_message = generate_commit_message(&diff, config, args.prompt.as_deref()).await?;
+    Ok((branch_name, commit_message))
+}
