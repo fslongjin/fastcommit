@@ -7,6 +7,7 @@ use crate::config::{self, Config};
 
 use crate::constants::BRANCH_NAME_PROMPT;
 use crate::constants::{DEFAULT_MAX_TOKENS, DEFAULT_OPENAI_MODEL, DEFAULT_PROMPT_TEMPLATE};
+use crate::sanitizer::sanitize_with_config;
 use crate::template_engine::{render_template, TemplateContext};
 
 async fn generate_commit_message(
@@ -14,14 +15,23 @@ async fn generate_commit_message(
     config: &config::Config,
     user_description: Option<&str>,
 ) -> anyhow::Result<String> {
-    let auth = Auth::new(config.api_key.as_str());
+    // sanitize diff & user description first
+    let (sanitized_diff, sanitized_user_desc_opt, redactions) =
+        sanitize_with_config(diff, user_description, config);
+    if !redactions.is_empty() {
+        log::debug!(
+            "Sanitized {} potential secrets from diff/prompt",
+            redactions.len()
+        );
+    }
 
+    let auth = Auth::new(config.api_key.as_str());
     let openai = OpenAI::new(auth, &config.api_base());
 
-    // Add "commit message: " prefix to user description if provided
-    let prefixed_user_description = user_description.map(|desc| {
+    // Add "commit message: " prefix to user description if provided (after sanitization)
+    let prefixed_user_description = sanitized_user_desc_opt.map(|desc| {
         if desc.trim().is_empty() {
-            desc.to_string()
+            desc
         } else {
             format!("commit message: {}", desc)
         }
@@ -31,7 +41,7 @@ async fn generate_commit_message(
         config.conventional,
         config.language,
         config.verbosity,
-        diff,
+        &sanitized_diff,
         prefixed_user_description.as_deref(),
     );
 
@@ -72,7 +82,6 @@ async fn generate_commit_message(
         .as_ref()
         .ok_or(anyhow::anyhow!("No message in response"))?
         .content;
-    // Extract content between <aicommit> tags
     let commit_message = extract_aicommit_message(msg)?;
     Ok(commit_message)
 }
@@ -164,11 +173,19 @@ async fn generate_branch_name_with_ai(
     prefix: Option<&str>,
     config: &Config,
 ) -> anyhow::Result<String> {
-    let auth = Auth::new(config.api_key.as_str());
+    // sanitize diff only (branch name uses only diff)
+    let (sanitized_diff, _, redactions) = sanitize_with_config(diff, None, config);
+    if !redactions.is_empty() {
+        log::debug!(
+            "Sanitized {} potential secrets from diff before branch generation",
+            redactions.len()
+        );
+    }
 
+    let auth = Auth::new(config.api_key.as_str());
     let openai = OpenAI::new(auth, &config.api_base());
 
-    let prompt = BRANCH_NAME_PROMPT.replace("{{diff}}", diff);
+    let prompt = BRANCH_NAME_PROMPT.replace("{{diff}}", &sanitized_diff);
     let messages = vec![
         Message {
             role: Role::System,
@@ -191,7 +208,7 @@ async fn generate_branch_name_with_ai(
         top_p: None,
         n: None,
         stream: Some(false),
-        stop: None, // 移除 stop words 以避免思考过程中的干扰
+        stop: None,
         max_tokens: Some(DEFAULT_MAX_TOKENS as i32),
         presence_penalty: None,
         frequency_penalty: None,
@@ -215,7 +232,6 @@ async fn generate_branch_name_with_ai(
 
     let branch_name = extract_aicommit_message(&msg)?;
 
-    // Clean up the branch name
     let branch_name = if let Some(prefix) = prefix {
         format!("{}{}", prefix.trim(), branch_name.trim())
     } else {

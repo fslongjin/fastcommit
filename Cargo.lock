@@ -350,6 +350,7 @@ dependencies = [
  "lazy_static",
  "log",
  "openai_api_rust",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",
