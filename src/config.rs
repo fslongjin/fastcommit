@@ -3,6 +3,18 @@ use std::{fmt::Display, fs};
 
 use crate::constants::{DEFAULT_MAX_TOKENS, DEFAULT_OPENAI_API_BASE, DEFAULT_OPENAI_MODEL};
 
+fn default_true() -> bool {
+    true
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CustomSanitizePattern {
+    /// A short name/identifier for the pattern. e.g. "INTERNAL_URL"
+    pub name: String,
+    /// The regex pattern string. It should be a valid Rust regex.
+    pub regex: String,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     api_base: Option<String>,
@@ -16,6 +28,12 @@ pub struct Config {
     pub verbosity: Verbosity,
     /// Prefix for generated branch names (e.g. username in monorepo)
     pub branch_prefix: Option<String>,
+    /// Enable sanitizing sensitive information (API keys, tokens, secrets) before sending diff to AI provider.
+    #[serde(default = "default_true")]
+    pub sanitize_secrets: bool,
+    /// User defined extra regex patterns for sanitizer.
+    #[serde(default)]
+    pub custom_sanitize_patterns: Vec<CustomSanitizePattern>,
 }
 
 impl Config {
@@ -104,6 +122,8 @@ impl Default for Config {
             language: CommitLanguage::default(),
             verbosity: Verbosity::default(),
             branch_prefix: None,
+            sanitize_secrets: true,
+            custom_sanitize_patterns: Vec::new(),
         }
     }
 }

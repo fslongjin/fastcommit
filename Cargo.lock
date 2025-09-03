@@ -340,7 +340,7 @@ dependencies = [
 
 [[package]]
 name = "fastcommit"
-version = "0.2.3"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -350,6 +350,7 @@ dependencies = [
  "lazy_static",
  "log",
  "openai_api_rust",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",

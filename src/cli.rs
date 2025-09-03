@@ -53,4 +53,10 @@ pub struct Args {
         help = "Generate commit message (use with -b to output both)"
     )]
     pub generate_message: bool,
+
+    #[clap(
+        long = "no-sanitize",
+        help = "Temporarily disable sensitive info sanitizer for this run"
+    )]
+    pub no_sanitize: bool,
 }

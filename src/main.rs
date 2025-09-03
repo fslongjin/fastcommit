@@ -5,6 +5,7 @@ mod cli;
 mod config;
 mod constants;
 mod generate;
+mod sanitizer;
 mod template_engine;
 mod update_checker;
 
@@ -23,6 +24,10 @@ async fn main() -> anyhow::Result<()> {
     }
     if let Some(v) = args.verbosity {
         config.verbosity = v;
+    }
+    if args.no_sanitize {
+        // CLI override to disable sanitizer
+        config.sanitize_secrets = false;
     }
 
     run_update_checker().await;
