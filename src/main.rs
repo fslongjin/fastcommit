@@ -1,6 +1,7 @@
 use clap::Parser;
 use log::error;
 
+mod animation;
 mod cli;
 mod config;
 mod constants;
@@ -12,6 +13,11 @@ mod update_checker;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     env_logger::init();
+
+    // 启动spinner动画
+    let spinner = animation::Spinner::new();
+    spinner.start_with_random_messages().await;
+
     let args = cli::Args::parse();
     let mut config = config::load_config().await?;
 
@@ -36,16 +42,23 @@ async fn main() -> anyhow::Result<()> {
     // 1. --gb --m 同时：生成分支名 + 提交信息
     // 2. 仅 --gb：只生成分支名
     // 3. 默认（无 --gb 或仅 --m）：生成提交信息
+
     if args.generate_branch && args.generate_message {
         let (branch_name, msg) = generate::generate_both(&args, &config).await?;
+        // 停止spinner动画
+        spinner.finish();
         println!("Generated branch name: {}", branch_name);
         println!("{}", msg);
     } else if args.generate_branch {
         let branch_name = generate::generate_branch(&args, &config).await?;
+        // 停止spinner动画
+        spinner.finish();
         println!("Generated branch name: {}", branch_name);
     } else {
         // 包括：无参数 或 仅 --m
         let msg = generate::generate(&args, &config).await?;
+        // 停止spinner动画
+        spinner.finish();
         println!("{}", msg);
     }
     Ok(())
