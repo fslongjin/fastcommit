@@ -10,8 +10,9 @@ You can install `fastcommit` using the following method:
 
 ```bash
 # Install using cargo
-cargo install --git  https://github.com/fslongjin/fastcommit --tag v0.4.0
+cargo install --git  https://github.com/fslongjin/fastcommit --tag v0.5.0
 ```
+
 
 ## Usage
 
@@ -35,6 +36,8 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
 - `-v, --verbosity <VERBOSITY>`: Set the detail level of the commit message. Acceptable values are `verbose` (detailed), `normal`, or `quiet` (concise). The default is `quiet`.
 - `-p, --prompt <PROMPT>`: Additional prompt to help AI understand the commit context.
 - `-r, --range <RANGE>`: Specify diff range for generating commit message (e.g. HEAD~1, abc123..def456).
+- `--no-wrap`: Disable text wrapping for long lines.
+- `--wrap-width <WIDTH>`: Set custom line width for text wrapping (default: config file setting or 80).
 - `-h, --help`: Print help information.
 - `-V, --version`: Print version information.
 
@@ -84,6 +87,19 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
    
    # Generate commit message for a range of commits
    fastcommit -r abc123..def456
+   ```
+
+8. Control text wrapping behavior:
+
+   ```bash
+   # Disable text wrapping
+   fastcommit --no-wrap
+   
+   # Set custom line width
+   fastcommit --wrap-width 60
+   
+   # Combine with other options
+   fastcommit -b -m --wrap-width 100
    ```
 
 ## Contributing

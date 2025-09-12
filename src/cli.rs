@@ -59,4 +59,13 @@ pub struct Args {
         help = "Temporarily disable sensitive info sanitizer for this run"
     )]
     pub no_sanitize: bool,
+
+    #[clap(long = "no-wrap", help = "Disable text wrapping for long lines")]
+    pub no_wrap: bool,
+
+    #[clap(
+        long = "wrap-width",
+        help = "Set custom line width for text wrapping (default: terminal width)"
+    )]
+    pub wrap_width: Option<usize>,
 }

@@ -8,7 +8,7 @@
 
 ```bash
 # 使用 cargo 安装
-cargo install --git  https://github.com/fslongjin/fastcommit --tag v0.4.0
+cargo install --git  https://github.com/fslongjin/fastcommit --tag v0.5.0
 ```
 
 ## 使用
@@ -33,6 +33,8 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
 - `-v, --verbosity <VERBOSITY>`: 设置提交信息的详细级别。可选值为 `verbose`（详细）、`normal`（正常）或 `quiet`（简洁）。 默认为 `quiet`。
 - `-p, --prompt <PROMPT>`: 额外的提示信息，帮助 AI 理解提交上下文。
 - `-r, --range <RANGE>`: 指定差异范围以生成提交信息（例如：HEAD~1, abc123..def456）。
+- `--no-wrap`: 禁用长行文本换行。
+- `--wrap-width <WIDTH>`: 设置文本换行的自定义行宽度（默认：配置文件设置或 80）。
 - `-h, --help`: 打印帮助信息。
 - `-V, --version`: 打印版本信息。
 
@@ -82,6 +84,19 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
    
    # 为指定提交范围生成提交信息
    fastcommit -r abc123..def456
+   ```
+
+8. 控制文本换行行为：
+
+   ```bash
+   # 禁用文本换行
+   fastcommit --no-wrap
+   
+   # 设置自定义行宽度
+   fastcommit --wrap-width 60
+   
+   # 与其他选项组合使用
+   fastcommit -b -m --wrap-width 100
    ```
 
 ## 贡献
