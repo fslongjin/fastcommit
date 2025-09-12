@@ -60,7 +60,8 @@ message内容要使用<aicommit>标签包裹，例如：
 <aicommit>
 （这里是commit标题）
 
-(这里是commit message内容)
+- (这里是commit message内容)
+- (这里是commit message内容)
 
 </aicommit>
 

@@ -8,6 +8,53 @@ fn default_true() -> bool {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TextWrapConfig {
+    /// Enable text wrapping for long lines
+    #[serde(default = "default_true")]
+    pub enabled: bool,
+    /// Default line width for text wrapping
+    #[serde(default = "default_wrap_width")]
+    pub default_width: usize,
+    /// Preserve word boundaries when wrapping
+    #[serde(default = "default_true")]
+    pub preserve_words: bool,
+    /// Break long words when necessary
+    #[serde(default = "default_true")]
+    pub break_long_words: bool,
+    /// Handle code blocks specially
+    #[serde(default = "default_true")]
+    pub handle_code_blocks: bool,
+    /// Preserve links in text
+    #[serde(default = "default_true")]
+    pub preserve_links: bool,
+    /// Hanging indent for wrapped lines (empty string for no indent)
+    #[serde(default = "default_hanging_indent")]
+    pub hanging_indent: String,
+}
+
+fn default_wrap_width() -> usize {
+    80
+}
+
+fn default_hanging_indent() -> String {
+    String::new() // 默认无悬挂缩进
+}
+
+impl Default for TextWrapConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            default_width: 80,
+            preserve_words: true,
+            break_long_words: true,
+            handle_code_blocks: true,
+            preserve_links: true,
+            hanging_indent: String::new(),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CustomSanitizePattern {
     /// A short name/identifier for the pattern. e.g. "INTERNAL_URL"
     pub name: String,
@@ -34,6 +81,9 @@ pub struct Config {
     /// User defined extra regex patterns for sanitizer.
     #[serde(default)]
     pub custom_sanitize_patterns: Vec<CustomSanitizePattern>,
+    /// Text wrapping configuration
+    #[serde(default)]
+    pub text_wrap: TextWrapConfig,
 }
 
 impl Config {
@@ -124,6 +174,7 @@ impl Default for Config {
             branch_prefix: None,
             sanitize_secrets: true,
             custom_sanitize_patterns: Vec::new(),
+            text_wrap: TextWrapConfig::default(),
         }
     }
 }

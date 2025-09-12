@@ -1,5 +1,6 @@
 use clap::Parser;
 use log::error;
+use text_wrapper::{TextWrapper, WrapConfig};
 
 mod animation;
 mod cli;
@@ -8,6 +9,7 @@ mod constants;
 mod generate;
 mod sanitizer;
 mod template_engine;
+mod text_wrapper;
 mod update_checker;
 
 #[tokio::main]
@@ -36,6 +38,18 @@ async fn main() -> anyhow::Result<()> {
         config.sanitize_secrets = false;
     }
 
+    // 确定是否启用文本包装 (CLI 参数优先级高于配置)
+    let enable_wrapping = !args.no_wrap && config.text_wrap.enabled;
+
+    // 预创建统一的包装配置和包装器 (如果需要)
+    let wrapper = if enable_wrapping {
+        let wrap_config =
+            WrapConfig::from_config_and_args(&config.text_wrap, args.wrap_width, false);
+        Some(TextWrapper::new(wrap_config))
+    } else {
+        None
+    };
+
     run_update_checker().await;
 
     // 根据参数决定生成内容：
@@ -47,21 +61,49 @@ async fn main() -> anyhow::Result<()> {
         let (branch_name, msg) = generate::generate_both(&args, &config).await?;
         // 停止spinner动画
         spinner.finish();
-        println!("Generated branch name: {}", branch_name);
-        println!("{}", msg);
+
+        print_wrapped_content(&wrapper, &branch_name, Some("Generated branch name:"));
+        print_wrapped_content(&wrapper, &msg, None);
     } else if args.generate_branch {
         let branch_name = generate::generate_branch(&args, &config).await?;
         // 停止spinner动画
         spinner.finish();
-        println!("Generated branch name: {}", branch_name);
+
+        print_wrapped_content(&wrapper, &branch_name, Some("Generated branch name:"));
     } else {
         // 包括：无参数 或 仅 --m
         let msg = generate::generate(&args, &config).await?;
         // 停止spinner动画
         spinner.finish();
-        println!("{}", msg);
+
+        // 对于提交消息，需要启用段落保留
+        let final_wrapper = if enable_wrapping {
+            let wrap_config =
+                WrapConfig::from_config_and_args(&config.text_wrap, args.wrap_width, true);
+            Some(TextWrapper::new(wrap_config))
+        } else {
+            None
+        };
+
+        print_wrapped_content(&final_wrapper, &msg, None);
     }
     Ok(())
+}
+
+fn print_wrapped_content(wrapper: &Option<TextWrapper>, content: &str, prefix: Option<&str>) {
+    if let Some(wrapper) = wrapper {
+        if let Some(p) = prefix {
+            println!("{} {}", p, wrapper.wrap(content));
+        } else {
+            println!("{}", wrapper.wrap(content));
+        }
+    } else {
+        if let Some(p) = prefix {
+            println!("{} {}", p, content);
+        } else {
+            println!("{}", content);
+        }
+    }
 }
 
 async fn run_update_checker() {

@@ -1,6 +1,6 @@
 [package]
 name = "fastcommit"
-version = "0.4.0"
+version = "0.5.0"
 description = "AI-based command line tool to quickly generate standardized commit messages."
 edition = "2021"
 authors = ["longjin <fslongjin@vip.qq.com>"]
@@ -25,3 +25,5 @@ tokio = { version = "1.43.0", features = ["full"] }
 rand = "0.8.5"
 indicatif = "0.17.8"
 toml = "0.8.20"
+unicode-width = "0.2.0"
+terminal_size = "0.4.0"
