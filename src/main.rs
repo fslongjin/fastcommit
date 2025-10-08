@@ -52,40 +52,32 @@ async fn main() -> anyhow::Result<()> {
 
     run_update_checker().await;
 
-    // 根据参数决定生成内容：
-    // 1. --gb --m 同时：生成分支名 + 提交信息
-    // 2. 仅 --gb：只生成分支名
-    // 3. 默认（无 --gb 或仅 --m）：生成提交信息
+    // 创建提交消息专用的包装器（启用段落保留）
+    let commit_wrapper = if enable_wrapping {
+        let wrap_config =
+            WrapConfig::from_config_and_args(&config.text_wrap, args.wrap_width, true);
+        Some(TextWrapper::new(wrap_config))
+    } else {
+        None
+    };
 
+    // 根据参数决定生成内容
     if args.generate_branch && args.generate_message {
+        // 生成分支名 + 提交信息
         let (branch_name, msg) = generate::generate_both(&args, &config).await?;
-        // 停止spinner动画
         spinner.finish();
-
         print_wrapped_content(&wrapper, &branch_name, Some("Generated branch name:"));
-        print_wrapped_content(&wrapper, &msg, None);
+        print_wrapped_content(&commit_wrapper, &msg, None);
     } else if args.generate_branch {
+        // 仅生成分支名
         let branch_name = generate::generate_branch(&args, &config).await?;
-        // 停止spinner动画
         spinner.finish();
-
         print_wrapped_content(&wrapper, &branch_name, Some("Generated branch name:"));
     } else {
-        // 包括：无参数 或 仅 --m
+        // 仅生成提交信息（默认行为）
         let msg = generate::generate(&args, &config).await?;
-        // 停止spinner动画
         spinner.finish();
-
-        // 对于提交消息，需要启用段落保留
-        let final_wrapper = if enable_wrapping {
-            let wrap_config =
-                WrapConfig::from_config_and_args(&config.text_wrap, args.wrap_width, true);
-            Some(TextWrapper::new(wrap_config))
-        } else {
-            None
-        };
-
-        print_wrapped_content(&final_wrapper, &msg, None);
+        print_wrapped_content(&commit_wrapper, &msg, None);
     }
     Ok(())
 }
