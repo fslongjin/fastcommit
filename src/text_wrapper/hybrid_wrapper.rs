@@ -13,7 +13,8 @@ impl HybridWrapper {
         Self {
             code_block_regex: Regex::new(r"```[\s\S]*?```").unwrap(),
             link_regex: Regex::new(r"https?://[^\s]+|\[([^\]]+)\]\(([^)]+)\)").unwrap(),
-            inline_code_regex: Regex::new(r"`[^`]+`").unwrap(),
+            // 支持单反引号和双反引号的行内代码（如 `code` 或 ``code``）
+            inline_code_regex: Regex::new(r"`{1,3}[^`]+?`{1,3}").unwrap(),
         }
     }
 }
@@ -24,11 +25,53 @@ impl WordWrapper for HybridWrapper {
             return String::new();
         }
 
-        // 解析文本段
-        let segments = self.parse_segments(text);
+        // 如果 preserve_paragraphs 为 true，需要先处理段落，然后再处理段
+        if config.preserve_paragraphs {
+            let mut result = String::new();
+            let paragraphs: Vec<&str> = text.split("\n\n").collect();
 
-        // 处理分段文本
-        self.wrap_segments(&segments, config)
+            for (i, paragraph) in paragraphs.iter().enumerate() {
+                if i > 0 {
+                    result.push_str("\n\n"); // 段落之间保留空行
+                }
+
+                // 检查段落内是否有换行符，如果有则保留
+                if paragraph.contains('\n') {
+                    let lines: Vec<&str> = paragraph.lines().collect();
+                    for (j, line) in lines.iter().enumerate() {
+                        if j > 0 {
+                            result.push('\n');
+                        }
+                        if !line.trim().is_empty() {
+                            // 对每一行单独处理，但不在段级别使用 preserve_paragraphs
+                            let mut line_config = config.clone();
+                            line_config.preserve_paragraphs = false;
+                            let segments = self.parse_segments(line.trim());
+                            let wrapped_line = self.wrap_segments(&segments, &line_config);
+                            result.push_str(&wrapped_line);
+                        } else {
+                            result.push('\n');
+                        }
+                    }
+                } else {
+                    // 段落内没有换行符，直接处理整个段落
+                    // 但不在段级别使用 preserve_paragraphs，因为段落处理已经在更高层级完成
+                    let mut para_config = config.clone();
+                    para_config.preserve_paragraphs = false;
+                    let segments = self.parse_segments(paragraph.trim());
+                    let wrapped_paragraph = self.wrap_segments(&segments, &para_config);
+                    result.push_str(&wrapped_paragraph);
+                }
+            }
+
+            result
+        } else {
+            // 解析文本段
+            let segments = self.parse_segments(text);
+
+            // 处理分段文本
+            self.wrap_segments(&segments, config)
+        }
     }
 
     fn wrap_segments(&self, segments: &[TextSegment], config: &WrapConfig) -> String {
@@ -36,26 +79,66 @@ impl WordWrapper for HybridWrapper {
         let mut current_line = String::new();
         let mut current_width = config.indent.width();
 
-        for segment in segments {
-            let processed = self.process_segment(segment, config);
+        // 检查是否是列表项（第一个段是 PlainText 且以 "- " 开头）
+        let is_list_item = segments
+            .first()
+            .and_then(|s| {
+                if let TextSegment::PlainText(text) = s {
+                    Some(text.trim_start().starts_with("-"))
+                } else {
+                    None
+                }
+            })
+            .unwrap_or(false);
 
-            if current_width + processed.width() <= config.max_width {
+        for (idx, segment) in segments.iter().enumerate() {
+            // 对于行内代码，需要特殊处理：作为不可分割的单元
+            // 行内代码已经包含反引号（从正则匹配中），不需要通过process_segment重复添加
+            let processed = match segment {
+                TextSegment::InlineCode(code) => {
+                    // 行内代码已经包含反引号，直接使用，作为不可分割的单元
+                    code.clone()
+                }
+                _ => self.process_segment(segment, config),
+            };
+
+            let processed_width = processed.width();
+
+            // 检查当前行是否能放下这个段
+            // 对于行内代码，如果当前行已经有内容且放不下，需要整体换行
+            // 对于普通文本，可以继续处理
+            // 特殊处理：如果是列表项，且当前行只包含列表标记（"-"），不要换行
+            let is_list_marker_only = is_list_item && idx == 0 && current_line.trim() == "-";
+            let should_wrap =
+                current_width + processed_width > config.max_width && !is_list_marker_only;
+
+            if !should_wrap {
                 current_line.push_str(&processed);
-                current_width += processed.width();
+                current_width += processed_width;
             } else {
                 // 当前行放不下，需要换行
-                if !current_line.is_empty() {
+                // 特殊处理：如果是列表项，且当前行只包含列表标记（"-"），不要换行
+                if !current_line.is_empty() && !is_list_marker_only {
                     result.push_str(&current_line);
                     result.push('\n');
                 }
 
                 // 新行处理
-                current_line = config.indent.clone();
-                if !current_line.is_empty() {
-                    current_line.push_str(&config.hanging_indent);
+                if is_list_marker_only {
+                    // 当前行只有 "-"，不要换行，继续在当前行处理
+                    if !current_line.ends_with(' ') {
+                        current_line.push(' ');
+                    }
+                    current_line.push_str(&processed);
+                    current_width = current_line.width();
+                } else {
+                    current_line = config.indent.clone();
+                    if !current_line.is_empty() {
+                        current_line.push_str(&config.hanging_indent);
+                    }
+                    current_line.push_str(&processed);
+                    current_width = current_line.width();
                 }
-                current_line.push_str(&processed);
-                current_width = current_line.width();
             }
         }
 
@@ -155,7 +238,12 @@ impl HybridWrapper {
         match segment {
             TextSegment::PlainText(text) => {
                 if config.handle_code_blocks {
-                    self.wrap_plain_text(text, config)
+                    // 在 wrap_segments 中，PlainText 段不应该使用 wrap_with_paragraphs
+                    // 因为段落处理应该在更高层级（wrap_text）进行
+                    // 这里只处理单词级别的换行，不处理段落
+                    let mut no_paragraph_config = config.clone();
+                    no_paragraph_config.preserve_paragraphs = false;
+                    self.wrap_plain_text(text, &no_paragraph_config)
                 } else {
                     text.clone()
                 }
@@ -175,7 +263,9 @@ impl HybridWrapper {
                 }
             }
             TextSegment::InlineCode(code) => {
-                format!("`{}`", code)
+                // InlineCode段已经包含反引号（从正则匹配中），直接返回
+                // 行内代码应该作为不可分割的单元，不进行额外的包装处理
+                code.clone()
             }
         }
     }
@@ -207,7 +297,8 @@ impl HybridWrapper {
                         result.push('\n');
                     }
                     if !line.trim().is_empty() {
-                        let wrapped_line = self.wrap_without_paragraphs(line.trim(), config);
+                        let trimmed = line.trim();
+                        let wrapped_line = self.wrap_without_paragraphs(trimmed, config);
                         result.push_str(&wrapped_line);
                     } else {
                         result.push('\n');
@@ -237,6 +328,9 @@ impl HybridWrapper {
             let word_width = word.width();
             let separator_width = if current_line.is_empty() { 0 } else { 1 };
 
+            // 特殊处理：如果当前行只包含 "-"（列表项标记），不要换行
+            let is_list_marker_only = current_line.trim() == "-";
+
             if current_width + separator_width + word_width <= config.max_width {
                 if !current_line.is_empty() {
                     current_line.push(' ');
@@ -247,10 +341,17 @@ impl HybridWrapper {
                 // 当前单词放不下，需要换行
                 if config.break_long_words && word_width > config.max_width {
                     // 长单词强制换行
-                    if !current_line.is_empty() {
+                    // 特殊处理：如果当前行只包含 "-"，不要换行，而是继续在当前行处理
+                    if !is_list_marker_only && !current_line.is_empty() {
                         lines.push(current_line);
                         current_line = String::new();
                         current_width = config.indent.width();
+                    } else if is_list_marker_only {
+                        // 当前行只有 "-"，不要换行，继续在当前行处理长单词
+                        if !current_line.ends_with(' ') {
+                            current_line.push(' ');
+                            current_width += 1;
+                        }
                     }
 
                     let mut remaining = word;
@@ -262,7 +363,7 @@ impl HybridWrapper {
                             self.break_word_at_width(remaining, available)
                         };
 
-                        if !current_line.is_empty() {
+                        if !current_line.is_empty() && !current_line.ends_with(' ') {
                             current_line.push(' ');
                         }
                         current_line.push_str(part);
@@ -279,12 +380,23 @@ impl HybridWrapper {
                     }
                 } else {
                     // 普通换行
-                    if !current_line.is_empty() {
-                        lines.push(current_line);
+                    // 特殊处理：如果当前行只包含 "-"，不要换行，而是继续在当前行处理
+                    if is_list_marker_only {
+                        // 当前行只有 "-"，不要换行，继续在当前行处理
+                        if !current_line.ends_with(' ') {
+                            current_line.push(' ');
+                        }
+                        current_line.push_str(word);
+                        current_width = current_line.width();
+                    } else {
+                        // 正常换行
+                        if !current_line.is_empty() {
+                            lines.push(current_line);
+                        }
+                        current_line = config.hanging_indent.clone();
+                        current_line.push_str(word);
+                        current_width = current_line.width();
                     }
-                    current_line = config.hanging_indent.clone();
-                    current_line.push_str(word);
-                    current_width = current_line.width();
                 }
             }
         }
