@@ -84,6 +84,12 @@ pub struct Config {
     /// Text wrapping configuration
     #[serde(default)]
     pub text_wrap: TextWrapConfig,
+    /// Automatically run git commit after generating the message
+    #[serde(default)]
+    pub auto_commit: bool,
+    /// Extra arguments to pass to git commit
+    #[serde(default)]
+    pub commit_args: Vec<String>,
 }
 
 impl Config {
@@ -175,6 +181,8 @@ impl Default for Config {
             sanitize_secrets: true,
             custom_sanitize_patterns: Vec::new(),
             text_wrap: TextWrapConfig::default(),
+            auto_commit: false,
+            commit_args: Vec::new(),
         }
     }
 }

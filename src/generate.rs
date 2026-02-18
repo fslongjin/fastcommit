@@ -265,3 +265,24 @@ pub async fn generate_both(args: &cli::Args, config: &Config) -> anyhow::Result<
     let commit_message = generate_commit_message(&diff, config, args.prompt.as_deref()).await?;
     Ok((branch_name, commit_message))
 }
+
+/// 执行 git commit，将生成的 message 作为 commit message
+pub fn execute_git_commit(message: &str, extra_args: &[String]) -> anyhow::Result<()> {
+    let mut cmd = Command::new("git");
+    cmd.args(["commit", "-m", message]);
+    for arg in extra_args {
+        cmd.arg(arg);
+    }
+    let output = cmd.output()?;
+    if output.status.success() {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        if !stdout.trim().is_empty() {
+            eprintln!("{}", stdout.trim());
+        }
+        eprintln!("\x1b[32mSuccessfully committed!\x1b[0m");
+        Ok(())
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        Err(anyhow::anyhow!("git commit failed:\n{}", stderr.trim()))
+    }
+}

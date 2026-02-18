@@ -68,4 +68,19 @@ pub struct Args {
         help = "Set custom line width for text wrapping (default: terminal width)"
     )]
     pub wrap_width: Option<usize>,
+
+    #[clap(
+        short = 'c',
+        long = "commit",
+        help = "Automatically run git commit after generating the message"
+    )]
+    pub commit: bool,
+
+    #[clap(
+        long = "commit-args",
+        help = "Extra arguments to pass to git commit (can be specified multiple times)",
+        num_args = 1,
+        allow_hyphen_values = true,
+    )]
+    pub commit_args: Vec<String>,
 }
