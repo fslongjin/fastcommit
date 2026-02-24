@@ -8,9 +8,14 @@ use crate::config::{CommitLanguage, Verbosity};
     about = concat!(
         "AI-based command line tool to quickly generate standardized commit messages.\n\n",
         "Version: ", env!("CARGO_PKG_VERSION")
-    )
+    ),
+    subcommand_required = false,
+    arg_required_else_help = false
 )]
 pub struct Args {
+    #[clap(flatten)]
+    pub commit_args: CommitArgs,
+
     #[clap(subcommand)]
     pub command: Option<Commands>,
 }
@@ -125,4 +130,157 @@ pub struct PrArgs {
 
     #[clap(flatten)]
     pub common: CommonArgs,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Helper function to parse args from iterator
+    fn parse_args<I, T>(iter: I) -> Result<Args, clap::Error>
+    where
+        I: IntoIterator<Item = T>,
+        T: Into<std::ffi::OsString> + Clone,
+    {
+        Args::try_parse_from(iter)
+    }
+
+    #[test]
+    fn test_top_level_short_options_combined() {
+        // Test: fastcommit -bm (generate both branch and message)
+        let args = parse_args(["fastcommit", "-bm"]).unwrap();
+        assert!(args.command.is_none(), "No subcommand should be set");
+        assert!(
+            args.commit_args.generate_branch,
+            "-b should set generate_branch"
+        );
+        assert!(
+            args.commit_args.generate_message,
+            "-m should set generate_message"
+        );
+    }
+
+    #[test]
+    fn test_top_level_short_options_separate() {
+        // Test: fastcommit -b -m (generate both branch and message)
+        let args = parse_args(["fastcommit", "-b", "-m"]).unwrap();
+        assert!(args.command.is_none());
+        assert!(args.commit_args.generate_branch);
+        assert!(args.commit_args.generate_message);
+    }
+
+    #[test]
+    fn test_top_level_branch_only() {
+        // Test: fastcommit -b (generate branch only)
+        let args = parse_args(["fastcommit", "-b"]).unwrap();
+        assert!(args.command.is_none());
+        assert!(args.commit_args.generate_branch);
+        assert!(!args.commit_args.generate_message);
+    }
+
+    #[test]
+    fn test_top_level_message_only() {
+        // Test: fastcommit -m (generate message only - default behavior)
+        let args = parse_args(["fastcommit", "-m"]).unwrap();
+        assert!(args.command.is_none());
+        assert!(!args.commit_args.generate_branch);
+        assert!(args.commit_args.generate_message);
+    }
+
+    #[test]
+    fn test_no_args_uses_default() {
+        // Test: fastcommit (no args - default commit behavior)
+        let args = parse_args(["fastcommit"]).unwrap();
+        assert!(args.command.is_none());
+        assert!(!args.commit_args.generate_branch);
+        assert!(!args.commit_args.generate_message);
+    }
+
+    #[test]
+    fn test_commit_subcommand_with_options() {
+        // Test: fastcommit commit -bm (using subcommand explicitly)
+        let args = parse_args(["fastcommit", "commit", "-bm"]).unwrap();
+        assert!(args.command.is_some(), "Subcommand should be set");
+        if let Some(Commands::Commit(commit_args)) = args.command {
+            assert!(commit_args.generate_branch);
+            assert!(commit_args.generate_message);
+        } else {
+            panic!("Expected Commit subcommand");
+        }
+    }
+
+    #[test]
+    fn test_pr_subcommand() {
+        // Test: fastcommit pr 123
+        let args = parse_args(["fastcommit", "pr", "123"]).unwrap();
+        if let Some(Commands::Pr(pr_args)) = args.command {
+            assert_eq!(pr_args.pr_number, Some(123));
+        } else {
+            panic!("Expected Pr subcommand");
+        }
+    }
+
+    #[test]
+    fn test_top_level_range_option() {
+        // Test: fastcommit -r HEAD~1
+        let args = parse_args(["fastcommit", "-r", "HEAD~1"]).unwrap();
+        assert!(args.command.is_none());
+        assert_eq!(args.commit_args.range, Some("HEAD~1".to_string()));
+    }
+
+    #[test]
+    fn test_top_level_with_common_args() {
+        // Test: fastcommit -bm --no-wrap --language en
+        let args = parse_args(["fastcommit", "-bm", "--no-wrap", "--language", "en"]).unwrap();
+        assert!(args.command.is_none());
+        assert!(args.commit_args.generate_branch);
+        assert!(args.commit_args.generate_message);
+        assert!(args.commit_args.common.no_wrap);
+        assert_eq!(
+            args.commit_args.common.language,
+            Some(CommitLanguage::English)
+        );
+    }
+
+    #[test]
+    fn test_commit_subcommand_with_range() {
+        // Test: fastcommit commit -r HEAD~1 -b
+        let args = parse_args(["fastcommit", "commit", "-r", "HEAD~1", "-b"]).unwrap();
+        if let Some(Commands::Commit(commit_args)) = args.command {
+            assert!(commit_args.generate_branch);
+            assert_eq!(commit_args.range, Some("HEAD~1".to_string()));
+        } else {
+            panic!("Expected Commit subcommand");
+        }
+    }
+
+    #[test]
+    fn test_diff_file_option() {
+        // Test: fastcommit --diff-file /path/to/diff
+        let args = parse_args(["fastcommit", "--diff-file", "/path/to/diff"]).unwrap();
+        assert!(args.command.is_none());
+        assert_eq!(
+            args.commit_args.diff_file,
+            Some("/path/to/diff".to_string())
+        );
+    }
+
+    #[test]
+    fn test_auto_commit_option() {
+        // Test: fastcommit -c (auto commit after generating)
+        let args = parse_args(["fastcommit", "-c"]).unwrap();
+        assert!(args.command.is_none());
+        assert!(args.commit_args.common.commit);
+    }
+
+    #[test]
+    fn test_combined_all_options() {
+        // Test: fastcommit -bmc --no-sanitize (all flags combined)
+        let args = parse_args(["fastcommit", "-bmc", "--no-sanitize"]).unwrap();
+        assert!(args.command.is_none());
+        assert!(args.commit_args.generate_branch);
+        assert!(args.commit_args.generate_message);
+        assert!(args.commit_args.common.commit);
+        assert!(args.commit_args.common.no_sanitize);
+    }
 }
