@@ -10,7 +10,7 @@ You can install `fastcommit` using the following method:
 
 ```bash
 # Install using cargo
-cargo install --git  https://github.com/fslongjin/fastcommit --tag v0.7.0
+cargo install --git  https://github.com/fslongjin/fastcommit --tag v0.7.1
 ```
 
 
@@ -78,7 +78,11 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
 6. Generate both branch name and commit message:
 
    ```bash
+   # Using separate flags
    fastcommit -b -m
+
+   # Or using combined short flags
+   fastcommit -bm
    ```
 
 7. Generate commit message for a specific diff range:

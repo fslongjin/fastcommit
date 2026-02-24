@@ -25,11 +25,17 @@ async fn main() -> anyhow::Result<()> {
     let mut config = config::load_config().await?;
 
     // Handle subcommands
-    match args.command.unwrap_or_default() {
-        cli::Commands::Commit(commit_args) => {
+    match args.command {
+        Some(cli::Commands::Commit(commit_args)) => {
             handle_commit_command(&commit_args, &mut config, &spinner).await
         }
-        cli::Commands::Pr(pr_args) => handle_pr_command(&pr_args, &mut config, &spinner).await,
+        Some(cli::Commands::Pr(pr_args)) => {
+            handle_pr_command(&pr_args, &mut config, &spinner).await
+        }
+        None => {
+            // No subcommand specified, use top-level commit args
+            handle_commit_command(&args.commit_args, &mut config, &spinner).await
+        }
     }
 }
 

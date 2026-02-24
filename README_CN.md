@@ -8,7 +8,7 @@
 
 ```bash
 # 使用 cargo 安装
-cargo install --git  https://github.com/fslongjin/fastcommit --tag v0.7.0
+cargo install --git  https://github.com/fslongjin/fastcommit --tag v0.7.1
 ```
 
 ## 使用
@@ -75,7 +75,11 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
 6. 同时生成分支名和提交信息：
 
    ```bash
+   # 使用分开的选项
    fastcommit -b -m
+
+   # 或使用组合短选项
+   fastcommit -bm
    ```
 
 7. 为特定的差异范围生成提交信息：
