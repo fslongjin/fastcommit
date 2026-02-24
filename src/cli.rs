@@ -80,7 +80,7 @@ pub struct Args {
         long = "commit-args",
         help = "Extra arguments to pass to git commit (can be specified multiple times)",
         num_args = 1,
-        allow_hyphen_values = true,
+        allow_hyphen_values = true
     )]
     pub commit_args: Vec<String>,
 }
