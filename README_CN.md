@@ -35,6 +35,8 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
 - `-r, --range <RANGE>`: 指定差异范围以生成提交信息（例如：HEAD~1, abc123..def456）。
 - `--no-wrap`: 禁用长行文本换行。
 - `--wrap-width <WIDTH>`: 设置文本换行的自定义行宽度（默认：配置文件设置或 80）。
+- `-c, --commit`: 生成提交信息后自动执行 `git commit`。
+- `--commit-args <ARG>`: 传递给 `git commit` 的额外参数（可多次指定，例如 `--commit-args "-s" --commit-args "--no-verify"`）。
 - `-h, --help`: 打印帮助信息。
 - `-V, --version`: 打印版本信息。
 
@@ -97,6 +99,16 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
    
    # 与其他选项组合使用
    fastcommit -b -m --wrap-width 100
+   ```
+
+9. 生成提交信息后自动提交：
+
+   ```bash
+   # 生成并自动提交
+   fastcommit -c
+
+   # 自动提交并签名、跳过 hook
+   fastcommit -c --commit-args "-s" --commit-args "--no-verify"
    ```
 
 ## 贡献
