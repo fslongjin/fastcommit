@@ -1,4 +1,4 @@
-use clap::Parser;
+use clap::{Parser, Subcommand};
 
 use crate::config::{CommitLanguage, Verbosity};
 
@@ -11,9 +11,28 @@ use crate::config::{CommitLanguage, Verbosity};
     )
 )]
 pub struct Args {
-    #[clap(short, long, help = "Path to the file containing the diff to analyze")]
-    pub diff_file: Option<String>,
+    #[clap(subcommand)]
+    pub command: Option<Commands>,
+}
 
+#[derive(Subcommand, Debug)]
+pub enum Commands {
+    /// Generate commit message for staged changes (default behavior)
+    Commit(CommitArgs),
+
+    /// Generate commit message for a GitHub PR
+    Pr(PrArgs),
+}
+
+impl Default for Commands {
+    fn default() -> Self {
+        Commands::Commit(CommitArgs::default())
+    }
+}
+
+/// Common arguments shared by commit and pr commands
+#[derive(Parser, Debug, Default)]
+pub struct CommonArgs {
     #[clap(long, help = "Enable conventional commit style analysis")]
     pub conventional: Option<bool>,
 
@@ -24,35 +43,11 @@ pub struct Args {
     pub verbosity: Option<Verbosity>,
 
     #[clap(
-        long = "generate-branch",
-        short = 'b',
-        help = "Generate a branch name based on changes (optionally with prefix)"
-    )]
-    pub generate_branch: bool,
-
-    #[clap(long, help = "Override branch prefix (default from config)")]
-    pub branch_prefix: Option<String>,
-
-    #[clap(
         short,
         long,
         help = "Additional prompt to help AI understand the commit context"
     )]
     pub prompt: Option<String>,
-
-    #[clap(
-        short = 'r',
-        long,
-        help = "Specify diff range (e.g. HEAD~1, abc123..def456)"
-    )]
-    pub range: Option<String>,
-
-    #[clap(
-        short = 'm',
-        long = "message",
-        help = "Generate commit message (use with -b to output both)"
-    )]
-    pub generate_message: bool,
 
     #[clap(
         long = "no-sanitize",
@@ -83,4 +78,51 @@ pub struct Args {
         allow_hyphen_values = true
     )]
     pub commit_args: Vec<String>,
+}
+
+#[derive(Parser, Debug, Default)]
+pub struct CommitArgs {
+    #[clap(short, long, help = "Path to the file containing the diff to analyze")]
+    pub diff_file: Option<String>,
+
+    #[clap(
+        long = "generate-branch",
+        short = 'b',
+        help = "Generate a branch name based on changes (optionally with prefix)"
+    )]
+    pub generate_branch: bool,
+
+    #[clap(long, help = "Override branch prefix (default from config)")]
+    pub branch_prefix: Option<String>,
+
+    #[clap(
+        short = 'r',
+        long,
+        help = "Specify diff range (e.g. HEAD~1, abc123..def456)"
+    )]
+    pub range: Option<String>,
+
+    #[clap(
+        short = 'm',
+        long = "message",
+        help = "Generate commit message (use with -b to output both)"
+    )]
+    pub generate_message: bool,
+
+    #[clap(flatten)]
+    pub common: CommonArgs,
+}
+
+#[derive(Parser, Debug)]
+pub struct PrArgs {
+    /// PR number, auto-detect from current branch if not specified
+    #[clap(name = "PR_NUMBER")]
+    pub pr_number: Option<u32>,
+
+    /// Specify repository (format: owner/repo)
+    #[clap(long)]
+    pub repo: Option<String>,
+
+    #[clap(flatten)]
+    pub common: CommonArgs,
 }

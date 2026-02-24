@@ -10,7 +10,7 @@ use crate::constants::{DEFAULT_MAX_TOKENS, DEFAULT_OPENAI_MODEL, DEFAULT_PROMPT_
 use crate::sanitizer::sanitize_with_config;
 use crate::template_engine::{render_template, TemplateContext};
 
-async fn generate_commit_message(
+pub async fn generate_commit_message(
     diff: &str,
     config: &config::Config,
     user_description: Option<&str>,
@@ -162,9 +162,9 @@ fn get_diff(diff_file: Option<&str>, range: Option<&str>) -> anyhow::Result<Stri
     }
 }
 
-pub async fn generate(args: &cli::Args, config: &Config) -> anyhow::Result<String> {
+pub async fn generate(args: &cli::CommitArgs, config: &Config) -> anyhow::Result<String> {
     let diff = get_diff(args.diff_file.as_deref(), args.range.as_deref())?;
-    let message = generate_commit_message(&diff, config, args.prompt.as_deref()).await?;
+    let message = generate_commit_message(&diff, config, args.common.prompt.as_deref()).await?;
     Ok(message)
 }
 
@@ -245,7 +245,7 @@ async fn generate_branch_name_with_ai(
     Ok(branch_name)
 }
 
-pub async fn generate_branch(args: &cli::Args, config: &Config) -> anyhow::Result<String> {
+pub async fn generate_branch(args: &cli::CommitArgs, config: &Config) -> anyhow::Result<String> {
     let diff = get_diff(args.diff_file.as_deref(), args.range.as_deref())?;
     let prefix = args
         .branch_prefix
@@ -255,14 +255,18 @@ pub async fn generate_branch(args: &cli::Args, config: &Config) -> anyhow::Resul
     Ok(branch_name)
 }
 
-pub async fn generate_both(args: &cli::Args, config: &Config) -> anyhow::Result<(String, String)> {
+pub async fn generate_both(
+    args: &cli::CommitArgs,
+    config: &Config,
+) -> anyhow::Result<(String, String)> {
     let diff = get_diff(args.diff_file.as_deref(), args.range.as_deref())?;
     let prefix = args
         .branch_prefix
         .as_deref()
         .or(config.branch_prefix.as_deref());
     let branch_name = generate_branch_name_with_ai(&diff, prefix, config).await?;
-    let commit_message = generate_commit_message(&diff, config, args.prompt.as_deref()).await?;
+    let commit_message =
+        generate_commit_message(&diff, config, args.common.prompt.as_deref()).await?;
     Ok((branch_name, commit_message))
 }
 

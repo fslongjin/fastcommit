@@ -7,6 +7,7 @@ mod cli;
 mod config;
 mod constants;
 mod generate;
+mod pr;
 mod sanitizer;
 mod template_engine;
 mod text_wrapper;
@@ -23,17 +24,31 @@ async fn main() -> anyhow::Result<()> {
     let args = cli::Args::parse();
     let mut config = config::load_config().await?;
 
+    // Handle subcommands
+    match args.command.unwrap_or_default() {
+        cli::Commands::Commit(commit_args) => {
+            handle_commit_command(&commit_args, &mut config, &spinner).await
+        }
+        cli::Commands::Pr(pr_args) => handle_pr_command(&pr_args, &mut config, &spinner).await,
+    }
+}
+
+async fn handle_commit_command(
+    args: &cli::CommitArgs,
+    config: &mut config::Config,
+    spinner: &animation::Spinner,
+) -> anyhow::Result<()> {
     // 合并命令行参数和配置文件
-    if let Some(c) = args.conventional {
+    if let Some(c) = args.common.conventional {
         config.conventional = c;
     }
-    if let Some(l) = args.language {
+    if let Some(l) = args.common.language {
         config.language = l;
     }
-    if let Some(v) = args.verbosity {
+    if let Some(v) = args.common.verbosity {
         config.verbosity = v;
     }
-    if args.no_sanitize {
+    if args.common.no_sanitize {
         // CLI override to disable sanitizer
         config.sanitize_secrets = false;
     }
@@ -47,12 +62,12 @@ async fn main() -> anyhow::Result<()> {
     };
 
     // 确定是否启用文本包装 (CLI 参数优先级高于配置)
-    let enable_wrapping = !args.no_wrap && config.text_wrap.enabled;
+    let enable_wrapping = !args.common.no_wrap && config.text_wrap.enabled;
 
     // 预创建统一的包装配置和包装器 (如果需要)
     let wrapper = if enable_wrapping {
         let wrap_config =
-            WrapConfig::from_config_and_args(&config.text_wrap, args.wrap_width, false);
+            WrapConfig::from_config_and_args(&config.text_wrap, args.common.wrap_width, false);
         Some(TextWrapper::new(wrap_config))
     } else {
         None
@@ -63,7 +78,7 @@ async fn main() -> anyhow::Result<()> {
     // 创建提交消息专用的包装器（启用段落保留）
     let commit_wrapper = if enable_wrapping {
         let wrap_config =
-            WrapConfig::from_config_and_args(&config.text_wrap, args.wrap_width, true);
+            WrapConfig::from_config_and_args(&config.text_wrap, args.common.wrap_width, true);
         Some(TextWrapper::new(wrap_config))
     } else {
         None
@@ -72,7 +87,7 @@ async fn main() -> anyhow::Result<()> {
     // 根据参数决定生成内容
     if args.generate_branch && args.generate_message {
         // 生成分支名 + 提交信息
-        let (branch_name, msg) = generate::generate_both(&args, &config).await?;
+        let (branch_name, msg) = generate::generate_both(args, config).await?;
         spinner.finish();
         print_wrapped_content(&wrapper, &branch_name, Some("Generated branch name:"));
         print_wrapped_content(&commit_wrapper, &msg, None);
@@ -81,18 +96,55 @@ async fn main() -> anyhow::Result<()> {
         }
     } else if args.generate_branch {
         // 仅生成分支名
-        let branch_name = generate::generate_branch(&args, &config).await?;
+        let branch_name = generate::generate_branch(args, config).await?;
         spinner.finish();
         print_wrapped_content(&wrapper, &branch_name, Some("Generated branch name:"));
     } else {
         // 仅生成提交信息（默认行为）
-        let msg = generate::generate(&args, &config).await?;
+        let msg = generate::generate(args, config).await?;
         spinner.finish();
         print_wrapped_content(&commit_wrapper, &msg, None);
         if auto_commit {
             generate::execute_git_commit(&msg, commit_args)?;
         }
     }
+    Ok(())
+}
+
+async fn handle_pr_command(
+    args: &cli::PrArgs,
+    config: &mut config::Config,
+    spinner: &animation::Spinner,
+) -> anyhow::Result<()> {
+    // 合并命令行参数和配置文件
+    if let Some(c) = args.common.conventional {
+        config.conventional = c;
+    }
+    if let Some(l) = args.common.language {
+        config.language = l;
+    }
+    if let Some(v) = args.common.verbosity {
+        config.verbosity = v;
+    }
+    if args.common.no_sanitize {
+        config.sanitize_secrets = false;
+    }
+
+    // 确定是否启用文本包装
+    let enable_wrapping = !args.common.no_wrap && config.text_wrap.enabled;
+    let commit_wrapper = if enable_wrapping {
+        let wrap_config =
+            WrapConfig::from_config_and_args(&config.text_wrap, args.common.wrap_width, true);
+        Some(TextWrapper::new(wrap_config))
+    } else {
+        None
+    };
+
+    // Generate PR commit message
+    let msg = pr::generate_pr_message(args, config).await?;
+    spinner.finish();
+    print_wrapped_content(&commit_wrapper, &msg, None);
+
     Ok(())
 }
 
