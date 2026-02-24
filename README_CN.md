@@ -17,7 +17,7 @@ cargo install --git  https://github.com/fslongjin/fastcommit --tag v0.6.0
 
 ```bash
 git add .
-fastcommit 
+fastcommit
 ```
 
 ### 选项
@@ -29,7 +29,7 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
 - `-l, --language <LANGUAGE>`: 指定提交信息的语言。可选值为 `en`（英文）或 `zh`（中文）。
 - `-b, --generate-branch`: 生成分支名
    - `--branch-prefix`: 生成的分支名的前缀
-- `-m, --message`: 生成提交信息（与 -b 一起使用可同时输出） 
+- `-m, --message`: 生成提交信息（与 -b 一起使用可同时输出）
 - `-v, --verbosity <VERBOSITY>`: 设置提交信息的详细级别。可选值为 `verbose`（详细）、`normal`（正常）或 `quiet`（简洁）。 默认为 `quiet`。
 - `-p, --prompt <PROMPT>`: 额外的提示信息，帮助 AI 理解提交上下文。
 - `-r, --range <RANGE>`: 指定差异范围以生成提交信息（例如：HEAD~1, abc123..def456）。
@@ -83,7 +83,7 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
    ```bash
    # 为最近一次提交生成提交信息
    fastcommit -r HEAD~1
-   
+
    # 为指定提交范围生成提交信息
    fastcommit -r abc123..def456
    ```
@@ -93,10 +93,10 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
    ```bash
    # 禁用文本换行
    fastcommit --no-wrap
-   
+
    # 设置自定义行宽度
    fastcommit --wrap-width 60
-   
+
    # 与其他选项组合使用
    fastcommit -b -m --wrap-width 100
    ```
@@ -110,6 +110,46 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
    # 自动提交并签名、跳过 hook
    fastcommit -c --commit-args "-s" --commit-args "--no-verify"
    ```
+
+## GitHub PR 集成
+
+`fastcommit` 可以为 GitHub Pull Request 生成提交信息，适用于合并 PR 时使用。
+
+### 前置条件
+
+- 需要安装并登录 [GitHub CLI (`gh`)](https://cli.github.com/)
+
+### 使用方法
+
+```bash
+# 自动检测当前分支关联的 PR
+fastcommit pr
+
+# 为指定 PR 生成提交信息
+fastcommit pr 123
+
+# 指定仓库（不在 git 目录中时）
+fastcommit pr 123 --repo owner/repo
+
+# 使用约定式提交风格
+fastcommit pr 123 --conventional true
+
+# 指定语言
+fastcommit pr 123 -l zh
+```
+
+### PR 命令选项
+
+- `[PR_NUMBER]`: PR 编号，不指定则自动检测当前分支关联的 PR
+- `--repo <REPO>`: 指定仓库，格式为 `owner/repo`
+- `--conventional <CONVENTIONAL>`: 启用约定式提交风格
+- `-l, --language <LANGUAGE>`: 指定语言（`en` 或 `zh`）
+- `-v, --verbosity <VERBOSITY>`: 设置详细级别（`verbose`、`normal`、`quiet`）
+- `-p, --prompt <PROMPT>`: 额外的提示信息
+- `--no-sanitize`: 禁用敏感信息清理
+- `--no-wrap`: 禁用文本换行
+
+更多详情请参阅 [GitHub PR 集成指南](docs/github-pr-integration.md)。
 
 ## 贡献
 

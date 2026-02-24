@@ -86,7 +86,7 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
    ```bash
    # Generate commit message for the last commit
    fastcommit -r HEAD~1
-   
+
    # Generate commit message for a range of commits
    fastcommit -r abc123..def456
    ```
@@ -96,10 +96,10 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
    ```bash
    # Disable text wrapping
    fastcommit --no-wrap
-   
+
    # Set custom line width
    fastcommit --wrap-width 60
-   
+
    # Combine with other options
    fastcommit -b -m --wrap-width 100
    ```
@@ -114,9 +114,49 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
    fastcommit -c --commit-args "-s" --commit-args "--no-verify"
    ```
 
+## GitHub PR Integration
+
+`fastcommit` can generate commit messages for GitHub Pull Requests, which is useful when merging PRs.
+
+### Prerequisites
+
+- [GitHub CLI (`gh`)](https://cli.github.com/) must be installed and authenticated
+
+### Usage
+
+```bash
+# Auto-detect PR from current branch
+fastcommit pr
+
+# Generate commit message for a specific PR
+fastcommit pr 123
+
+# Specify repository (when not in a git directory)
+fastcommit pr 123 --repo owner/repo
+
+# Use conventional commit style
+fastcommit pr 123 --conventional true
+
+# Specify language
+fastcommit pr 123 -l zh
+```
+
+### PR Command Options
+
+- `[PR_NUMBER]`: PR number to generate commit message for. If not specified, auto-detects from current branch.
+- `--repo <REPO>`: Specify repository in `owner/repo` format.
+- `--conventional <CONVENTIONAL>`: Enable conventional commit style.
+- `-l, --language <LANGUAGE>`: Specify language (`en` or `zh`).
+- `-v, --verbosity <VERBOSITY>`: Set detail level (`verbose`, `normal`, `quiet`).
+- `-p, --prompt <PROMPT>`: Additional context for AI.
+- `--no-sanitize`: Disable sensitive info sanitizer.
+- `--no-wrap`: Disable text wrapping.
+
+For more details, see [GitHub PR Integration Guide](docs/github-pr-integration.md).
+
 ## Contributing
 
- Contributions of code or suggestions are welcome! Please read the [Contributing Guide](CONTRIBUTING.md) first.
+Contributions of code or suggestions are welcome! Please read the [Contributing Guide](CONTRIBUTING.md) first.
 
 ## License
 
