@@ -38,6 +38,14 @@ async fn main() -> anyhow::Result<()> {
         config.sanitize_secrets = false;
     }
 
+    // 合并 auto_commit 参数
+    let auto_commit = args.commit || config.auto_commit;
+    let commit_args = if args.commit_args.is_empty() {
+        &config.commit_args
+    } else {
+        &args.commit_args
+    };
+
     // 确定是否启用文本包装 (CLI 参数优先级高于配置)
     let enable_wrapping = !args.no_wrap && config.text_wrap.enabled;
 
@@ -68,6 +76,9 @@ async fn main() -> anyhow::Result<()> {
         spinner.finish();
         print_wrapped_content(&wrapper, &branch_name, Some("Generated branch name:"));
         print_wrapped_content(&commit_wrapper, &msg, None);
+        if auto_commit {
+            generate::execute_git_commit(&msg, commit_args)?;
+        }
     } else if args.generate_branch {
         // 仅生成分支名
         let branch_name = generate::generate_branch(&args, &config).await?;
@@ -78,6 +89,9 @@ async fn main() -> anyhow::Result<()> {
         let msg = generate::generate(&args, &config).await?;
         spinner.finish();
         print_wrapped_content(&commit_wrapper, &msg, None);
+        if auto_commit {
+            generate::execute_git_commit(&msg, commit_args)?;
+        }
     }
     Ok(())
 }

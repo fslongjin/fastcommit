@@ -10,7 +10,7 @@ You can install `fastcommit` using the following method:
 
 ```bash
 # Install using cargo
-cargo install --git  https://github.com/fslongjin/fastcommit --tag v0.5.2
+cargo install --git  https://github.com/fslongjin/fastcommit --tag v0.6.0
 ```
 
 
@@ -38,6 +38,8 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
 - `-r, --range <RANGE>`: Specify diff range for generating commit message (e.g. HEAD~1, abc123..def456).
 - `--no-wrap`: Disable text wrapping for long lines.
 - `--wrap-width <WIDTH>`: Set custom line width for text wrapping (default: config file setting or 80).
+- `-c, --commit`: Automatically run `git commit` after generating the message.
+- `--commit-args <ARG>`: Extra arguments to pass to `git commit` (can be specified multiple times, e.g. `--commit-args "-s" --commit-args "--no-verify"`).
 - `-h, --help`: Print help information.
 - `-V, --version`: Print version information.
 
@@ -100,6 +102,16 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
    
    # Combine with other options
    fastcommit -b -m --wrap-width 100
+   ```
+
+9. Auto-commit after generating the message:
+
+   ```bash
+   # Generate and auto-commit
+   fastcommit -c
+
+   # Auto-commit with signoff and skip hooks
+   fastcommit -c --commit-args "-s" --commit-args "--no-verify"
    ```
 
 ## Contributing
