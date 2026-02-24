@@ -54,11 +54,11 @@ async fn handle_commit_command(
     }
 
     // 合并 auto_commit 参数
-    let auto_commit = args.commit || config.auto_commit;
-    let commit_args = if args.commit_args.is_empty() {
+    let auto_commit = args.common.commit || config.auto_commit;
+    let commit_args = if args.common.commit_args.is_empty() {
         &config.commit_args
     } else {
-        &args.commit_args
+        &args.common.commit_args
     };
 
     // 确定是否启用文本包装 (CLI 参数优先级高于配置)
