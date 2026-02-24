@@ -76,31 +76,23 @@ pub fn sanitize(
 
     // Apply builtin patterns
     for (kind, re) in builtin.iter() {
-        loop {
-            if let Some(m) = re.find(&sanitized) {
-                counter += 1;
-                let placeholder = format!("[REDACTED:{}#{}]", kind, counter);
-                sanitized.replace_range(m.start()..m.end(), &placeholder);
-                redactions.push(Redaction::new(kind, placeholder));
-            } else {
-                break;
-            }
+        while let Some(m) = re.find(&sanitized) {
+            counter += 1;
+            let placeholder = format!("[REDACTED:{kind}#{counter}]");
+            sanitized.replace_range(m.start()..m.end(), &placeholder);
+            redactions.push(Redaction::new(kind, placeholder));
         }
     }
 
     // Apply custom patterns – use their provided name (converted to static via leak for simplicity)
     for meta in custom_patterns {
-        loop {
-            if let Some(m) = meta.regex.find(&sanitized) {
-                counter += 1;
-                let placeholder = format!("[REDACTED:{}#{}]", meta.name, counter);
-                sanitized.replace_range(m.start()..m.end(), &placeholder);
-                // We leak the string to get a 'static str; acceptable given tiny count and CLI nature
-                let leaked: &'static str = Box::leak(meta.name.clone().into_boxed_str());
-                redactions.push(Redaction::new(leaked, placeholder));
-            } else {
-                break;
-            }
+        while let Some(m) = meta.regex.find(&sanitized) {
+            counter += 1;
+            let placeholder = format!("[REDACTED:{}#{counter}]", meta.name);
+            sanitized.replace_range(m.start()..m.end(), &placeholder);
+            // We leak the string to get a 'static str; acceptable given tiny count and CLI nature
+            let leaked: &'static str = Box::leak(meta.name.clone().into_boxed_str());
+            redactions.push(Redaction::new(leaked, placeholder));
         }
     }
 

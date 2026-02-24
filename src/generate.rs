@@ -33,7 +33,7 @@ pub async fn generate_commit_message(
         if desc.trim().is_empty() {
             desc
         } else {
-            format!("commit message: {}", desc)
+            format!("commit message: {desc}")
         }
     });
 
@@ -91,22 +91,17 @@ fn delete_thinking_contents(orig: &str) -> String {
     let end_tag = "</think>";
 
     let start_idx = orig.find(start_tag).unwrap_or(orig.len());
-    let end_idx = orig.find(end_tag).unwrap_or_else(|| 0);
-    let s = if start_idx < end_idx {
+    let end_idx = orig.find(end_tag).unwrap_or(0);
+    if start_idx < end_idx {
         let mut result = orig[..start_idx].to_string();
         result.push_str(&orig[end_idx..]);
         log::debug!(
-            "Delete thinking contents, start_idx: {}, end_idx: {}: {:?} => {:?}",
-            start_idx,
-            end_idx,
-            orig,
-            result
+            "Delete thinking contents, start_idx: {start_idx}, end_idx: {end_idx}: {orig:?} => {result:?}"
         );
         result
     } else {
         orig.to_string()
-    };
-    s
+    }
 }
 
 fn extract_aicommit_message(response: &str) -> anyhow::Result<String> {

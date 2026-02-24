@@ -151,6 +151,29 @@ fastcommit pr 123 -l zh
 
 更多详情请参阅 [GitHub PR 集成指南](docs/github-pr-integration.md)。
 
+## 开发
+
+### Pre-commit Hooks
+
+本项目使用 [pre-commit](https://pre-commit.com/) 在每次提交前自动运行代码质量检查。
+
+```bash
+# 安装 pre-commit
+pip install pre-commit
+
+# 安装 git hooks
+pre-commit install
+
+# （可选）手动运行所有检查
+pre-commit run --all-files
+```
+
+以下检查会在 `git commit` 时自动执行：
+
+- **rustfmt** — 代码格式化检查
+- **clippy** — 静态分析，警告视为错误
+- **cargo-check** — 编译检查
+
 ## 贡献
 
 欢迎贡献代码或提出建议！请先阅读 [贡献指南](CONTRIBUTING.md)。

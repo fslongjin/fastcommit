@@ -68,7 +68,7 @@ impl WordWrapper for CharacterWrapper {
         let mut lines = Vec::new();
         let mut current_line = indent.clone();
 
-        for (_i, ch) in text.chars().enumerate() {
+        for ch in text.chars() {
             if current_line.width() >= max_width && !current_line.trim().is_empty() {
                 lines.push(current_line);
                 current_line = hanging.clone();

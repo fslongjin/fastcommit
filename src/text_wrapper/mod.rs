@@ -1,4 +1,5 @@
 pub mod hybrid_wrapper;
+#[allow(clippy::module_inception)]
 pub mod text_wrapper;
 pub mod types;
 
@@ -12,8 +13,10 @@ mod tests {
 
     #[test]
     fn test_basic_wrapping() {
-        let mut config = WrapConfig::default();
-        config.max_width = 20;
+        let config = WrapConfig {
+            max_width: 20,
+            ..Default::default()
+        };
         let wrapper = TextWrapper::new(config);
         let text = "This is a long line of text that should be wrapped";
         let result = wrapper.wrap(text);
@@ -28,9 +31,11 @@ mod tests {
 
     #[test]
     fn test_long_word_handling() {
-        let mut config = WrapConfig::default();
-        config.max_width = 10;
-        config.break_long_words = true;
+        let config = WrapConfig {
+            max_width: 10,
+            break_long_words: true,
+            ..Default::default()
+        };
         let wrapper = TextWrapper::new(config);
         let text = "Thisisaverylongwordthatneedstobebroken";
         let result = wrapper.wrap(text);
@@ -41,9 +46,11 @@ mod tests {
 
     #[test]
     fn test_code_block_preservation() {
-        let mut config = WrapConfig::default();
-        config.max_width = 20;
-        config.handle_code_blocks = true;
+        let config = WrapConfig {
+            max_width: 20,
+            handle_code_blocks: true,
+            ..Default::default()
+        };
         let wrapper = TextWrapper::new(config);
         let text = "Here is some text ```code block``` and more text";
         let result = wrapper.wrap(text);
@@ -54,9 +61,11 @@ mod tests {
 
     #[test]
     fn test_code_block_disabled() {
-        let mut config = WrapConfig::default();
-        config.max_width = 20;
-        config.handle_code_blocks = false;
+        let config = WrapConfig {
+            max_width: 20,
+            handle_code_blocks: false,
+            ..Default::default()
+        };
         let wrapper = TextWrapper::new(config);
         let text = "Here is some text ```code block``` and more text";
         let result = wrapper.wrap(text);
@@ -67,9 +76,11 @@ mod tests {
 
     #[test]
     fn test_link_preservation() {
-        let mut config = WrapConfig::default();
-        config.max_width = 30;
-        config.preserve_links = true;
+        let config = WrapConfig {
+            max_width: 30,
+            preserve_links: true,
+            ..Default::default()
+        };
         let wrapper = TextWrapper::new(config);
         let text = "Check out this link: https://example.com/some/long/url for more info";
         let result = wrapper.wrap(text);
@@ -81,9 +92,11 @@ mod tests {
 
     #[test]
     fn test_link_disabled() {
-        let mut config = WrapConfig::default();
-        config.max_width = 30;
-        config.preserve_links = false;
+        let config = WrapConfig {
+            max_width: 30,
+            preserve_links: false,
+            ..Default::default()
+        };
         let wrapper = TextWrapper::new(config);
         let text = "Check out this link: https://example.com/some/long/url for more info";
         let result = wrapper.wrap(text);
@@ -94,9 +107,11 @@ mod tests {
 
     #[test]
     fn test_markdown_links() {
-        let mut config = WrapConfig::default();
-        config.max_width = 30;
-        config.preserve_links = true;
+        let config = WrapConfig {
+            max_width: 30,
+            preserve_links: true,
+            ..Default::default()
+        };
         let wrapper = TextWrapper::new(config);
         let text = "See [Example](https://example.com) for details";
         let result = wrapper.wrap(text);
@@ -106,8 +121,10 @@ mod tests {
 
     #[test]
     fn test_inline_code() {
-        let mut config = WrapConfig::default();
-        config.max_width = 20;
+        let config = WrapConfig {
+            max_width: 20,
+            ..Default::default()
+        };
         let wrapper = TextWrapper::new(config);
         let text = "Use the `command` to run it";
         let result = wrapper.wrap(text);
@@ -118,8 +135,10 @@ mod tests {
     #[test]
     fn test_inline_code_no_double_backticks() {
         // 测试修复：行内代码不应该重复添加反引号
-        let mut config = WrapConfig::default();
-        config.max_width = 80;
+        let config = WrapConfig {
+            max_width: 80,
+            ..Default::default()
+        };
         let wrapper = TextWrapper::new(config);
         let text = "Change the default path from ``config.json`` to ``settings.json``";
         let result = wrapper.wrap(text);
@@ -135,8 +154,10 @@ mod tests {
     #[test]
     fn test_inline_code_wrapping() {
         // 测试行内代码的换行处理：应该作为整体，不应该被拆分
-        let mut config = WrapConfig::default();
-        config.max_width = 30; // 设置较小的宽度
+        let config = WrapConfig {
+            max_width: 30,
+            ..Default::default()
+        };
         let wrapper = TextWrapper::new(config);
         let text = "Change the default path from ``config.json`` to ``settings.json``";
         let result = wrapper.wrap(text);
@@ -150,18 +171,19 @@ mod tests {
             assert_eq!(
                 backtick_count % 2,
                 0,
-                "行内代码的反引号应该成对出现: {}",
-                line
+                "行内代码的反引号应该成对出现: {line}"
             );
         }
     }
 
     #[test]
     fn test_mixed_content() {
-        let mut config = WrapConfig::default();
-        config.max_width = 25;
-        config.handle_code_blocks = true;
-        config.preserve_links = true;
+        let config = WrapConfig {
+            max_width: 25,
+            handle_code_blocks: true,
+            preserve_links: true,
+            ..Default::default()
+        };
         let wrapper = TextWrapper::new(config);
         let text =
             "Here is a link: https://example.com and some ```code block``` with `inline code`";
@@ -174,11 +196,13 @@ mod tests {
 
     #[test]
     fn test_complex_scenario() {
-        let mut config = WrapConfig::default();
-        config.max_width = 80; // 更合理的宽度
-        config.handle_code_blocks = true;
-        config.preserve_links = true;
-        config.preserve_words = true;
+        let config = WrapConfig {
+            max_width: 80,
+            handle_code_blocks: true,
+            preserve_links: true,
+            preserve_words: true,
+            ..Default::default()
+        };
         let wrapper = TextWrapper::new(config);
         let text = "This is a long commit message that contains https://example.com and some ```rust\nfn main() {\n    println!(\"Hello\");\n}\n``` plus `inline_code` for reference.";
         let result = wrapper.wrap(text);
@@ -199,7 +223,7 @@ mod tests {
                 && !line.trim().starts_with("fn")
                 && !line.trim().starts_with("println")
             {
-                assert!(line.width() <= 80, "Line '{}' exceeds width 80", line);
+                assert!(line.width() <= 80, "Line '{line}' exceeds width 80");
             }
         }
     }
@@ -207,9 +231,11 @@ mod tests {
     #[test]
     fn test_list_item_no_wrap_after_dash() {
         // 测试列表项在 `-` 后不换行
-        let mut config = WrapConfig::default();
-        config.max_width = 80;
-        config.preserve_paragraphs = true;
+        let config = WrapConfig {
+            max_width: 80,
+            preserve_paragraphs: true,
+            ..Default::default()
+        };
         let wrapper = TextWrapper::new(config);
 
         // 测试用例：列表项以 `-` 开头，后续文本很长
@@ -227,9 +253,11 @@ mod tests {
     #[test]
     fn test_list_item_with_inline_code_as_whole() {
         // 测试列表项包含行内代码时作为整体处理
-        let mut config = WrapConfig::default();
-        config.max_width = 80;
-        config.preserve_paragraphs = true;
+        let config = WrapConfig {
+            max_width: 80,
+            preserve_paragraphs: true,
+            ..Default::default()
+        };
         let wrapper = TextWrapper::new(config);
 
         // 测试用例：列表项包含行内代码，不应该在行内代码前后换行
@@ -246,7 +274,6 @@ mod tests {
         assert!(lines[0].contains("class"), "第一行应该包含后续文本");
 
         // 验证行内代码前后不换行（即第一行应该包含 `-` 和 `Use` 以及 `Config`）
-        // 注意：由于文本处理，可能 `-` 和 `Use` 之间有空格，所以检查它们都在第一行
         assert!(
             lines[0].contains("-") && lines[0].contains("Use") && lines[0].contains("`Config`"),
             "列表项应该在行内代码前后保持整体，第一行: '{}'",
@@ -257,9 +284,11 @@ mod tests {
     #[test]
     fn test_list_item_with_multiple_inline_codes() {
         // 测试列表项包含多个行内代码时作为整体处理
-        let mut config = WrapConfig::default();
-        config.max_width = 80;
-        config.preserve_paragraphs = true;
+        let config = WrapConfig {
+            max_width: 80,
+            preserve_paragraphs: true,
+            ..Default::default()
+        };
         let wrapper = TextWrapper::new(config);
 
         // 测试用例：列表项包含多个行内代码
@@ -275,7 +304,6 @@ mod tests {
         );
 
         // 验证列表项作为整体处理，行内代码前后不换行
-        // 注意：由于文本处理，可能 `-` 和 `Add` 之间有空格，所以检查它们都在第一行
         assert!(
             lines[0].contains("-") && lines[0].contains("Add") && lines[0].contains("`getUser`"),
             "列表项应该在第一个行内代码前后保持整体，第一行: '{}'",
@@ -286,9 +314,11 @@ mod tests {
     #[test]
     fn test_list_item_preserve_paragraphs() {
         // 测试列表项在保留段落格式时的换行行为
-        let mut config = WrapConfig::default();
-        config.max_width = 80;
-        config.preserve_paragraphs = true;
+        let config = WrapConfig {
+            max_width: 80,
+            preserve_paragraphs: true,
+            ..Default::default()
+        };
         let wrapper = TextWrapper::new(config);
 
         // 测试用例：包含多个列表项的段落
@@ -305,8 +335,7 @@ mod tests {
                 // 验证列表项的第一行不应该只有 `-`
                 assert!(
                     line.trim().len() > 1,
-                    "列表项不应该在 `-` 后立即换行: {}",
-                    line
+                    "列表项不应该在 `-` 后立即换行: {line}"
                 );
             }
         }
@@ -316,9 +345,11 @@ mod tests {
     #[test]
     fn test_list_item_long_text_wrapping() {
         // 测试列表项文本很长时的换行行为
-        let mut config = WrapConfig::default();
-        config.max_width = 50; // 设置较小的宽度以触发换行
-        config.preserve_paragraphs = true;
+        let config = WrapConfig {
+            max_width: 50,
+            preserve_paragraphs: true,
+            ..Default::default()
+        };
         let wrapper = TextWrapper::new(config);
 
         // 测试用例：列表项文本很长，应该换行，但 `-` 不应该单独一行
@@ -338,8 +369,7 @@ mod tests {
                 if !line.trim().is_empty() {
                     assert!(
                         !line.trim().starts_with("-") || line.trim().starts_with("- "),
-                        "后续行不应该意外包含列表标记: {}",
-                        line
+                        "后续行不应该意外包含列表标记: {line}"
                     );
                 }
             }

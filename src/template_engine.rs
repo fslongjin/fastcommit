@@ -41,7 +41,7 @@ pub fn render_template(template: &str, context: TemplateContext) -> anyhow::Resu
         )
         .replace(
             PromptTemplateReplaceLabel::VerbosityLevel.get_label(),
-            context.verbosity.to_template_level(),
+            context.verbosity.as_template_level(),
         )
         .replace(
             PromptTemplateReplaceLabel::Diff.get_label(),
