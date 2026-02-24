@@ -57,6 +57,7 @@ impl WordWrapper for WordBoundaryWrapper {
 }
 
 // 字符包装器
+#[allow(dead_code)]
 pub struct CharacterWrapper;
 
 impl WordWrapper for CharacterWrapper {
