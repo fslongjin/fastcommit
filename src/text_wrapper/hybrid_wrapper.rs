@@ -250,14 +250,14 @@ impl HybridWrapper {
             }
             TextSegment::CodeBlock(code) => {
                 if config.handle_code_blocks {
-                    format!("\n{}\n", code)
+                    format!("\n{code}\n")
                 } else {
                     code.clone()
                 }
             }
             TextSegment::Link(url, text) => {
                 if config.preserve_links {
-                    format!("[{}]({})", text, url)
+                    format!("[{text}]({url})")
                 } else {
                     text.clone()
                 }

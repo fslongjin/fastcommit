@@ -102,7 +102,7 @@ impl Config {
         let api_base = if api_base.ends_with("/") {
             api_base.to_owned()
         } else {
-            format!("{}/", api_base)
+            format!("{api_base}/")
         };
 
         api_base
@@ -110,7 +110,7 @@ impl Config {
 }
 
 /// Commit message verbosity level.
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Copy, clap::ValueEnum)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Copy, clap::ValueEnum, Default)]
 pub enum Verbosity {
     /// Detailed commit message.
     #[serde(rename = "verbose")]
@@ -123,17 +123,12 @@ pub enum Verbosity {
     /// Quiet commit message.
     #[serde(rename = "quiet")]
     #[clap(name = "quiet")]
+    #[default]
     Quiet,
 }
 
-impl Default for Verbosity {
-    fn default() -> Self {
-        Verbosity::Quiet
-    }
-}
-
 impl Verbosity {
-    pub fn to_template_level(&self) -> &'static str {
+    pub fn as_template_level(self) -> &'static str {
         match self {
             Verbosity::Verbose => "详细",
             Verbosity::Normal => "中等",
@@ -142,20 +137,15 @@ impl Verbosity {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, clap::ValueEnum)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, clap::ValueEnum, Default)]
 pub enum CommitLanguage {
     #[clap(name = "en")]
     #[serde(rename = "en")]
     English,
     #[clap(name = "zh")]
     #[serde(rename = "zh")]
+    #[default]
     Chinese,
-}
-
-impl Default for CommitLanguage {
-    fn default() -> Self {
-        CommitLanguage::Chinese
-    }
 }
 
 impl Display for CommitLanguage {

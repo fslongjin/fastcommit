@@ -58,11 +58,11 @@ pub struct Cache {
 pub async fn check_for_updates() -> Result<Option<UpdateInfo>> {
     // 获取当前版本
     let current_version = env!("CARGO_PKG_VERSION");
-    debug!("当前版本: {}", current_version);
+    debug!("当前版本: {current_version}");
 
     // 获取缓存路径
     let cache_path = get_cache_path()?;
-    debug!("缓存路径: {}", cache_path);
+    debug!("缓存路径: {cache_path}");
 
     // 检查是否有有效的缓存
     if let Some(cached_info) = load_cached_info(&cache_path)? {
@@ -113,7 +113,7 @@ fn get_cache_path() -> Result<String> {
 
 // 加载缓存的更新信息
 fn load_cached_info(path: &str) -> Result<Option<UpdateInfo>> {
-    debug!("尝试加载缓存文件: {}", path);
+    debug!("尝试加载缓存文件: {path}");
     if !Path::new(path).exists() {
         debug!("缓存文件不存在");
         return Ok(None);
@@ -129,7 +129,7 @@ fn load_cached_info(path: &str) -> Result<Option<UpdateInfo>> {
 
 // 保存更新信息到缓存
 fn save_cached_info(path: &str, info: &UpdateInfo) -> Result<()> {
-    debug!("保存更新信息到缓存: {}", path);
+    debug!("保存更新信息到缓存: {path}");
     let content = serde_json::to_string_pretty(info)?;
     fs::write(path, content)?;
     debug!("缓存保存成功");
@@ -147,10 +147,7 @@ fn is_cache_valid(info: &UpdateInfo) -> bool {
 
     if let Some(expired_time) = expired_time {
         let is_valid = current_time < expired_time;
-        debug!(
-            "过期时间: {}, 当前时间: {}, 缓存有效: {}",
-            expired_time, current_time, is_valid
-        );
+        debug!("过期时间: {expired_time}, 当前时间: {current_time}, 缓存有效: {is_valid}");
         is_valid
     } else {
         debug!("无法解析缓存时间，缓存无效");
@@ -160,17 +157,17 @@ fn is_cache_valid(info: &UpdateInfo) -> bool {
 
 // 解析时间字符串
 fn parse_time(time_str: &str) -> Option<u64> {
-    debug!("解析时间字符串: {}", time_str);
+    debug!("解析时间字符串: {time_str}");
     // 处理两种时间格式
     if let Ok(ts) = time_str.parse::<u64>() {
-        debug!("解析为时间戳: {}", ts);
+        debug!("解析为时间戳: {ts}");
         return Some(ts);
     }
 
     // 尝试解析RFC3339格式的时间
     if let Ok(datetime) = chrono::DateTime::parse_from_rfc3339(time_str) {
         let timestamp = datetime.timestamp() as u64;
-        debug!("解析为RFC3339时间: {}", timestamp);
+        debug!("解析为RFC3339时间: {timestamp}");
         Some(timestamp)
     } else {
         debug!("无法解析时间字符串");
@@ -181,7 +178,7 @@ fn parse_time(time_str: &str) -> Option<u64> {
 // 从网络获取最新版本信息
 async fn fetch_latest_version() -> Result<UpdateInfo> {
     let url = UPDATE_CHECKER_URL;
-    debug!("发送请求到: {}", url);
+    debug!("发送请求到: {url}");
 
     let response = reqwest::get(url)
         .await
@@ -237,10 +234,7 @@ fn create_default_update_info() -> UpdateInfo {
 
 // 比较版本号
 fn is_newer_version(remote_version: &str, current_version: &str) -> bool {
-    debug!(
-        "比较版本号: 远程版本={}, 当前版本={}",
-        remote_version, current_version
-    );
+    debug!("比较版本号: 远程版本={remote_version}, 当前版本={current_version}");
     // 移除版本号前的'v'字符（如果存在）
     let remote = remote_version.strip_prefix('v').unwrap_or(remote_version);
     let current = current_version.strip_prefix('v').unwrap_or(current_version);
@@ -257,7 +251,7 @@ fn is_newer_version(remote_version: &str, current_version: &str) -> bool {
     for (r, c) in remote_parts.iter().zip(current_parts.iter()) {
         match (r.parse::<u32>(), c.parse::<u32>()) {
             (Ok(r_num), Ok(c_num)) => {
-                debug!("比较数字版本段: {} vs {}", r_num, c_num);
+                debug!("比较数字版本段: {r_num} vs {c_num}");
                 if r_num > c_num {
                     debug!("远程版本更新");
                     return true;
@@ -270,7 +264,7 @@ fn is_newer_version(remote_version: &str, current_version: &str) -> bool {
             }
             _ => {
                 // 如果无法解析为数字，按字典序比较
-                debug!("按字典序比较版本段: {} vs {}", r, c);
+                debug!("按字典序比较版本段: {r} vs {c}");
                 if r > c {
                     debug!("远程版本更新");
                     return true;
@@ -284,7 +278,7 @@ fn is_newer_version(remote_version: &str, current_version: &str) -> bool {
 
     // 如果所有段都相等，检查是否有更多段
     let result = remote_parts.len() > current_parts.len();
-    debug!("版本段比较完成，远程版本是否更新: {}", result);
+    debug!("版本段比较完成，远程版本是否更新: {result}");
     result
 }
 
@@ -298,12 +292,12 @@ pub fn display_update_info(update_info: &UpdateInfo) {
     let vertical = "│";
 
     let content = vec![
-        format!("✨ fastcommit has a new version available!"),
+        "✨ fastcommit has a new version available!".to_string(),
         String::new(),
         format!("📦 New version: {}", update_info.version),
         format!("📅 Release date: {}", update_info.published_at),
         String::new(),
-        format!("🚀 Install the new version with the following command:"),
+        "🚀 Install the new version with the following command:".to_string(),
         format!(
             "  cargo install --git https://github.com/fslongjin/fastcommit --tag {}",
             update_info.tag
@@ -331,7 +325,7 @@ pub fn display_update_info(update_info: &UpdateInfo) {
     let box_width = max_width + 4; // 2 spaces padding on each side
 
     // Top border
-    println!("{}{}{}", corner_tl, border.repeat(box_width), corner_tr);
+    println!("{corner_tl}{}{corner_tr}", border.repeat(box_width));
 
     // Content lines
     for line in content {
@@ -346,17 +340,17 @@ pub fn display_update_info(update_info: &UpdateInfo) {
             }
         }
 
-        print!("{}  ", vertical);
-        print!("{}", line);
+        print!("{vertical}  ");
+        print!("{line}");
         // Add padding to align the right border
         for _ in 0..(max_width - display_width) {
             print!(" ");
         }
-        println!("  {}", vertical);
+        println!("  {vertical}");
     }
 
     // Bottom border
-    println!("{}{}{}", corner_bl, border.repeat(box_width), corner_br);
+    println!("{corner_bl}{}{corner_br}", border.repeat(box_width));
     println!();
 }
 
@@ -366,10 +360,10 @@ mod tests {
 
     #[test]
     fn test_version_comparison() {
-        assert_eq!(is_newer_version("v0.1.8", "v0.1.7"), true);
-        assert_eq!(is_newer_version("v0.2.0", "v0.1.7"), true);
-        assert_eq!(is_newer_version("v1.0.0", "v0.1.7"), true);
-        assert_eq!(is_newer_version("v0.1.7", "v0.1.7"), false);
-        assert_eq!(is_newer_version("v0.1.6", "v0.1.7"), false);
+        assert!(is_newer_version("v0.1.8", "v0.1.7"));
+        assert!(is_newer_version("v0.2.0", "v0.1.7"));
+        assert!(is_newer_version("v1.0.0", "v0.1.7"));
+        assert!(!is_newer_version("v0.1.7", "v0.1.7"));
+        assert!(!is_newer_version("v0.1.6", "v0.1.7"));
     }
 }

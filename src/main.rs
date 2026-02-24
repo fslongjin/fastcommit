@@ -155,12 +155,10 @@ fn print_wrapped_content(wrapper: &Option<TextWrapper>, content: &str, prefix: O
         } else {
             println!("{}", wrapper.wrap(content));
         }
+    } else if let Some(p) = prefix {
+        println!("{p} {content}");
     } else {
-        if let Some(p) = prefix {
-            println!("{} {}", p, content);
-        } else {
-            println!("{}", content);
-        }
+        println!("{content}");
     }
 }
 
