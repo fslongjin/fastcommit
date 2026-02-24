@@ -114,6 +114,29 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
    fastcommit -c --commit-args "-s" --commit-args "--no-verify"
    ```
 
+## Development
+
+### Pre-commit Hooks
+
+This project uses [pre-commit](https://pre-commit.com/) to run code quality checks before each commit.
+
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Install the git hooks
+pre-commit install
+
+# (Optional) Run all hooks manually
+pre-commit run --all-files
+```
+
+The following checks will run automatically on `git commit`:
+
+- **rustfmt** — Code formatting check
+- **clippy** — Static analysis with warnings as errors
+- **cargo-check** — Compilation check
+
 ## GitHub PR Integration
 
 `fastcommit` can generate commit messages for GitHub Pull Requests, which is useful when merging PRs.
