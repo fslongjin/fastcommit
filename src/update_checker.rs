@@ -291,6 +291,13 @@ pub fn display_update_info(update_info: &UpdateInfo) {
     let corner_br = "╯";
     let vertical = "│";
 
+    // Sanitize the tag to prevent command injection: only allow alphanumeric, '.', '-', '_'
+    let sanitized_tag = update_info
+        .tag
+        .chars()
+        .filter(|c| c.is_alphanumeric() || *c == '.' || *c == '-' || *c == '_')
+        .collect::<String>();
+
     let content = vec![
         "✨ fastcommit has a new version available!".to_string(),
         String::new(),
@@ -300,7 +307,7 @@ pub fn display_update_info(update_info: &UpdateInfo) {
         "🚀 Install the new version with the following command:".to_string(),
         format!(
             "  cargo install --git https://github.com/fslongjin/fastcommit --tag {}",
-            update_info.tag
+            sanitized_tag
         ),
     ];
 
