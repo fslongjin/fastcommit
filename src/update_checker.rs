@@ -180,7 +180,15 @@ async fn fetch_latest_version() -> Result<UpdateInfo> {
     let url = UPDATE_CHECKER_URL;
     debug!("发送请求到: {url}");
 
-    let response = reqwest::get(url)
+    let client = reqwest::Client::builder()
+        .connect_timeout(std::time::Duration::from_secs(5))
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| anyhow::anyhow!("创建HTTP客户端失败: {:?}", e))?;
+
+    let response = client
+        .get(url)
+        .send()
         .await
         .map_err(|e| anyhow::anyhow!("请求更新服务器失败: {:?}", e.source()))?;
     debug!("收到响应状态: {}", response.status());
