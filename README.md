@@ -10,7 +10,7 @@ You can install `fastcommit` using the following method:
 
 ```bash
 # Install using cargo
-cargo install --git  https://github.com/fslongjin/fastcommit --tag v0.7.1
+cargo install --git  https://github.com/fslongjin/fastcommit --tag v0.7.2
 ```
 
 

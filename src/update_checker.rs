@@ -180,7 +180,15 @@ async fn fetch_latest_version() -> Result<UpdateInfo> {
     let url = UPDATE_CHECKER_URL;
     debug!("发送请求到: {url}");
 
-    let response = reqwest::get(url)
+    let client = reqwest::Client::builder()
+        .connect_timeout(std::time::Duration::from_secs(5))
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| anyhow::anyhow!("创建HTTP客户端失败: {:?}", e))?;
+
+    let response = client
+        .get(url)
+        .send()
         .await
         .map_err(|e| anyhow::anyhow!("请求更新服务器失败: {:?}", e.source()))?;
     debug!("收到响应状态: {}", response.status());
@@ -291,6 +299,13 @@ pub fn display_update_info(update_info: &UpdateInfo) {
     let corner_br = "╯";
     let vertical = "│";
 
+    // Sanitize the tag to prevent command injection: only allow alphanumeric, '.', '-', '_'
+    let sanitized_tag = update_info
+        .tag
+        .chars()
+        .filter(|c| c.is_alphanumeric() || *c == '.' || *c == '-' || *c == '_')
+        .collect::<String>();
+
     let content = vec![
         "✨ fastcommit has a new version available!".to_string(),
         String::new(),
@@ -300,7 +315,7 @@ pub fn display_update_info(update_info: &UpdateInfo) {
         "🚀 Install the new version with the following command:".to_string(),
         format!(
             "  cargo install --git https://github.com/fslongjin/fastcommit --tag {}",
-            update_info.tag
+            sanitized_tag
         ),
     ];
 
