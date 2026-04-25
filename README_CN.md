@@ -8,7 +8,7 @@
 
 ```bash
 # 使用 cargo 安装
-cargo install --git  https://github.com/fslongjin/fastcommit --tag v0.7.2
+cargo install --git  https://github.com/fslongjin/fastcommit --tag v0.7.3
 ```
 
 ## 使用
@@ -28,7 +28,7 @@ NOTE: All common config can be configured via `~/.fastcommit/config.toml`
 - `--conventional <CONVENTIONAL>`: 启用或禁用规范提交风格分析。可选值为 `true` 或 `false`。
 - `-l, --language <LANGUAGE>`: 指定提交信息的语言。可选值为 `en`（英文）或 `zh`（中文）。
 - `-b, --generate-branch`: 生成分支名
-   - `--branch-prefix`: 生成的分支名的前缀
+   - `--branch-prefix <BRANCH_PREFIX>`, `--bp <BRANCH_PREFIX>`: 生成的分支名的前缀
 - `-m, --message`: 生成提交信息（与 -b 一起使用可同时输出）
 - `-v, --verbosity <VERBOSITY>`: 设置提交信息的详细级别。可选值为 `verbose`（详细）、`normal`（正常）或 `quiet`（简洁）。 默认为 `quiet`。
 - `-p, --prompt <PROMPT>`: 额外的提示信息，帮助 AI 理解提交上下文。
