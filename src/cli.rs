@@ -97,7 +97,11 @@ pub struct CommitArgs {
     )]
     pub generate_branch: bool,
 
-    #[clap(long, help = "Override branch prefix (default from config)")]
+    #[clap(
+        long,
+        visible_alias = "bp",
+        help = "Override branch prefix (default from config)"
+    )]
     pub branch_prefix: Option<String>,
 
     #[clap(
@@ -263,6 +267,36 @@ mod tests {
             args.commit_args.diff_file,
             Some("/path/to/diff".to_string())
         );
+    }
+
+    #[test]
+    fn test_branch_prefix_alias_top_level() {
+        let args = parse_args(["fastcommit", "--bp=feature/"]).unwrap();
+        assert!(args.command.is_none());
+        assert_eq!(args.commit_args.branch_prefix, Some("feature/".to_string()));
+        assert!(!args.commit_args.generate_branch);
+    }
+
+    #[test]
+    fn test_branch_prefix_alias_commit_subcommand() {
+        let args = parse_args(["fastcommit", "commit", "-b", "--bp=feature/"]).unwrap();
+        if let Some(Commands::Commit(commit_args)) = args.command {
+            assert!(commit_args.generate_branch);
+            assert_eq!(commit_args.branch_prefix, Some("feature/".to_string()));
+        } else {
+            panic!("Expected Commit subcommand");
+        }
+    }
+
+    #[test]
+    fn test_prompt_short_option_still_works_with_generate_branch() {
+        let args = parse_args(["fastcommit", "-b", "-p", "extra context"]).unwrap();
+        assert!(args.commit_args.generate_branch);
+        assert_eq!(
+            args.commit_args.common.prompt,
+            Some("extra context".to_string())
+        );
+        assert_eq!(args.commit_args.branch_prefix, None);
     }
 
     #[test]
